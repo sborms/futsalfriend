@@ -1,0 +1,16 @@
+.git
+.github
+.pytest_cache
+.ruff_cache
+.venv
+.coverage
+.cache
+.gitignore
+*.pyc
+**/__pycache__
+coverage.xml
+poetry.lock
+assets
+data
+notebooks
+tests

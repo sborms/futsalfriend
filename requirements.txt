@@ -1,0 +1,14 @@
+jupyter
+ipykernel
+black
+isort
+ruff
+pytest
+pytest-cov
+pre-commit
+numpy
+pandas
+fastapi
+uvicorn
+streamlit
+python-dotenv
