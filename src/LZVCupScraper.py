@@ -217,8 +217,8 @@ class LZVCupScraper(BaseScraper):
 
         # grab rows
         rows_html = [
-            l.find_all("div", attrs={"class": lambda x: x.startswith("item-col col-")})
-            for l in table.find_all("li", class_="item")[1:]
+            li.find_all("div", attrs={"class": lambda x: x.startswith("item-col col-")})
+            for li in table.find_all("li", class_="item")[1:]
         ]  # drops the header
 
         # extract values row-by-row
