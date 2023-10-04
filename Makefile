@@ -25,7 +25,3 @@ coverage:
 test:
 	@echo ">>> Running unit tests within existing environment"
 	python -m pytest -vv
-	
-train:
-	@echo ">>> Training model"
-	python ./scripts/train.py
