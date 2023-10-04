@@ -4,6 +4,7 @@ install:
 
 format:
 	@echo ">>> Formatting files using Black"
+	isort .
 	black .
 
 lint:

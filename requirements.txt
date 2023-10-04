@@ -12,3 +12,6 @@ fastapi
 uvicorn
 streamlit
 python-dotenv
+requests
+beautifulsoup4
+lxml
