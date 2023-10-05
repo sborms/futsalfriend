@@ -1,0 +1,16 @@
+{
+    "base_url": "https://www.lzvcup.be",
+    "areas": {
+        "ANTWERPEN": "results/1",
+        "BRUSSELS GEWEST": "results/2",
+        "LIMBURG": "results/3",
+        "OOST-VLAANDEREN": "results/4",
+        "VLAAMS BRABANT": "results/5",
+        "WEST-VLAANDEREN": "results/6"
+    },
+    "output": {
+        "DIR_COMPETITIONS_TEAMS": "data/competitions_teams.json",
+        "DIR_STATS": "data/stats.csv",
+        "DIR_STATS_HISTORICAL": "data/stats_historical.csv"
+    }
+}
