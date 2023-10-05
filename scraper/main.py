@@ -3,7 +3,7 @@ import time
 import pandas as pd
 import structlog
 from base import DataStorage
-from scrapers.lzvcup import LZVCupScraper
+from parsers.lzvcup import LZVCupParser
 
 log = structlog.get_logger()
 
@@ -18,7 +18,7 @@ def scrape(config):
         config = {"base_url": base_url, "area_name": area_name, "area_url": area_url}
 
         # initialize scraper instance
-        scraper = LZVCupScraper(config)
+        scraper = LZVCupParser(config)
 
         # get all regions within area
         region_cards = scraper.parse_region_cards()
@@ -49,14 +49,16 @@ def store(config):
     dir_competitions_teams = config["output"]["dir_competitions_teams"]
     dir_stats = config["output"]["dir_stats"]
 
-    DataStorage.store_json(dict_out, dir_competitions_teams)
-    DataStorage.store_csv(df_stats_all, dir_stats)
+    DataStorage.store_json(dict_out, dir=dir_competitions_teams)
+    DataStorage.store_csv(df_stats_all, dir=dir_stats, index=False)
 
 
 if __name__ == "__name__":
-    log.info(f"Let's scrape!", start=time.time())
-
     config = DataStorage.load_json("config.json")
+    log.info(f"Config loaded", time=time.time())
 
     dict_out, df_stats_all = scrape(config)
+    log.info(f"Data scraped", time=time.time())
+
     store(config)
+    log.info(f"Data stored", time=time.time())

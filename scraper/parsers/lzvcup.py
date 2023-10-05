@@ -5,11 +5,8 @@ import requests
 
 from scraper.base import BaseScraper
 
-# TODO: scrape current and historical competition standings
-# TODO: scrape sporthalls information
 
-
-class LZVCupScraper(BaseScraper):
+class LZVCupParser(BaseScraper):
     def __init__(self, config):
         """Config should minimally include: 'base_url', 'area_name', and 'area_url'."""
         super().__init__(config)
@@ -19,7 +16,7 @@ class LZVCupScraper(BaseScraper):
             self._area_url = self.convert_to_full_url(self._area_url)
 
     def parse_region_cards(self):
-        """Region cards display the competitions for each region."""
+        """Parses the region cards which display the competitions for each region."""
         # get HTML
         soup = self.make_soup(self._area_url)
 
@@ -42,6 +39,7 @@ class LZVCupScraper(BaseScraper):
         return dict(zip(regions_names, regions_competitions_cards))
 
     def parse_competitions_from_region_card(self, region_competition_card):
+        """Parses each competition and the respective teams for given region."""
         # get the name sof the competition (e.g. 2e Klasse)
         # or the sporthalls locations together with the respective page url
         card_elements = region_competition_card.find_all(
@@ -72,8 +70,8 @@ class LZVCupScraper(BaseScraper):
 
     def parse_teams(self, dict_competitions, region):
         """
-        Parse the teams based on the region-specific "competitions" output
-        from LZVCupScraper.parse_competitions_from_region_card()
+        Parses the teams based on the region-specific "competitions" output
+        from LZVCupScraper.parse_competitions_from_region_card().
         """
         if len(dict_competitions) == 0:
             print("No competitions found in input, returning None")
@@ -83,7 +81,7 @@ class LZVCupScraper(BaseScraper):
         list_of_dfs = []
         for competition, dict_teams in dict_competitions.items():
             for team, url_full in dict_teams["teams"].items():
-                print(f"Processing {team} from {competition} in {region} ({area})")
+                print(f"Processing {area} - {region} - {competition} - {team}")
 
                 # parse HTML
                 soup = self.make_soup(url_full)
@@ -108,9 +106,23 @@ class LZVCupScraper(BaseScraper):
 
         return df_teams
 
+    def parse_sporthalls(self):  # TODO: sporthalls information
+        """Parses the sportshalls information."""
+        pass
+
+    def parse_competitions_standings(self):  # TODO: current competition standings
+        """Parses current historical competitions standings."""
+        pass
+
+    def parse_team_stats_history(self):  # TODO: historical team standings
+        """Parses previous team competition standings."""
+        pass
+
     @staticmethod
     def parse_player_stats_history(name, url_full):
         """
+        Parses the historical statistics for a given player url into a pandas df.
+
         Example usage:
             df_stats.apply(
                 lambda x: LZVCupScraper.parse_player_stats_history(x.Teamleden, x._url),
@@ -150,6 +162,7 @@ class LZVCupScraper(BaseScraper):
     ############################
 
     def _parse_urls_teams(self, soup):
+        """Parses the urls for each team as {team_name: url, ...}."""
         tags_teams = [
             s.find("a") for s in soup.find_all("div", class_="col-10 text-nowrap")
         ]
@@ -162,6 +175,7 @@ class LZVCupScraper(BaseScraper):
         return dict_teams
 
     def _parse_team_stats(self, soup):
+        """Parses player statistics (games, assists, goals, ...) into a pandas df."""
         # get basic table HTML
         table = soup.find("ul", class_="item-list striped")
 
@@ -205,6 +219,7 @@ class LZVCupScraper(BaseScraper):
         return df
 
     def _parse_players_url_from_rows(self, rows_html):
+        """Parses the player urls for given team as {player_name: url, ...}."""
         dict_players = {}
         for player in rows_html:
             player_info = player[1]
