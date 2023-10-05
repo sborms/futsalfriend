@@ -25,3 +25,13 @@ coverage:
 test:
 	@echo ">>> Running unit tests within existing environment"
 	python -m pytest -vv
+
+scrape:
+	@echo ">>> Scraping data from PCS"
+	python ./scraper/main.py
+
+push:
+	@echo ">>> Stage, commit, and push to GitHub"
+	git add .
+	git commit -m "$(message)"
+	git push
