@@ -2,8 +2,7 @@ import io
 
 import pandas as pd
 import requests
-
-from scraper.base import BaseScraper
+from base import BaseScraper
 
 
 class LZVCupParser(BaseScraper):

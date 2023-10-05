@@ -1,4 +1,4 @@
-import time
+import os
 
 import pandas as pd
 import structlog
@@ -27,7 +27,8 @@ def scrape(config):
         dict_regions = {}
         for region in regions:
             # get all teams for all competitions within a single region
-            # note: some competitions appear duplicated across regions (e.g. 4E KLASSE C GENT <> 1E KLASSE DENDERSTREEK, cf. teams Balls & Glory)
+            # note: some competitions appear duplicated across regions,
+            # for instance 4E KLASSE C GENT <> 1E KLASSE DENDERSTREEK
             competitions = scraper.parse_competitions_from_region_card(
                 region_cards[region]
             )
@@ -53,12 +54,15 @@ def store(config):
     DataStorage.store_csv(df_stats_all, dir=dir_stats, index=False)
 
 
-if __name__ == "__name__":
-    config = DataStorage.load_json("config.json")
-    log.info(f"Config loaded", time=time.time())
+if __name__ == "__main__":
+    DIR_SCRIPT = os.path.dirname(os.path.abspath(__file__))
+    log.info(f"Running script from {DIR_SCRIPT}")
+
+    config = DataStorage.load_json(f"{DIR_SCRIPT}/config.json")
+    log.info(f"Config loaded")
 
     dict_out, df_stats_all = scrape(config)
-    log.info(f"Data scraped", time=time.time())
+    log.info(f"Data scraped")
 
     store(config)
-    log.info(f"Data stored", time=time.time())
+    log.info(f"Data stored")
