@@ -35,3 +35,7 @@ push:
 	git add .
 	git commit -m "$(message)" --no-verify
 	git push
+
+debug:
+	@echo ">>> Debugging Python script"
+	python -m pdb -c continue $(script)

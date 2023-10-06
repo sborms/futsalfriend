@@ -1,14 +1,16 @@
 import io
 
+import numpy as np
 import pandas as pd
 import requests
 from base import BaseScraper
+from utils import chunks
 
 
 class LZVCupParser(BaseScraper):
-    def __init__(self, config):
+    def __init__(self, config, **kwargs) -> None:
         """Config should minimally include: 'base_url', 'area_name', and 'area_url'."""
-        super().__init__(config)
+        super().__init__(config, **kwargs)
 
         # complete area url
         if "_area_url" in dir(self):
@@ -65,60 +67,127 @@ class LZVCupParser(BaseScraper):
             dict_teams = self._parse_urls_teams(soup)
             dict_competitions[competition] = {"url": url_full, "teams": dict_teams}
 
-        return {"competitions": dict_competitions, "sportshalls": sportshalls}
+        return {
+            "competitions": dict_competitions,
+            "sportshalls": sportshalls,
+        }
 
-    def parse_teams(self, dict_competitions, region):
+    def parse_standings_and_stats(self, dict_competitions, region):
         """
-        Parses the teams based on the region-specific "competitions" output
-        from LZVCupScraper.parse_competitions_from_region_card().
+        Parses the competition standings and team stats based on the region-specific
+        "competitions" output from LZVCupScraper.parse_competitions_from_region_card().
+
+        Note: this is slightly inefficient what concerns getting the standings
+        because the same HTML is parsed twice (once to get the team urls in another
+        function call and once to get the standings).
         """
         if len(dict_competitions) == 0:
-            print("No competitions found in input, returning None")
-            return None
+            self._logger.warning(
+                "No competitions in input, returning None", region=region
+            )
+            return None, None
 
         area = self._area_name
-        list_of_dfs = []
-        for competition, dict_teams in dict_competitions.items():
-            for team, url_full in dict_teams["teams"].items():
-                print(f"Processing {area} - {region} - {competition} - {team}")
 
+        list_standings, list_of_stats = [], []
+        for competition, dict_teams in dict_competitions.items():
+            self._logger.info(f"Processing {area} - {region} - {competition}")
+
+            # get standings for competition
+            soup = self.make_soup(dict_teams["url"])
+
+            # retrieve current standings
+            df_standings = self._parse_competition_standings(soup)
+
+            df_standings["_competition"] = competition
+            df_standings["_region"] = region
+            df_standings["_area"] = area
+
+            list_standings.append(df_standings)
+
+            # get statistics for all teams
+            for team, url_full in dict_teams["teams"].items():
                 # parse HTML
                 soup = self.make_soup(url_full)
 
                 # get team stats
                 try:
-                    df = self._parse_team_stats(soup)
+                    df_stats_team = self._parse_team_stats(soup)
                 except AttributeError:
-                    print(f"Error: {team} at {url_full} probably has no player info")
+                    self._logger.warning(
+                        "No player info available", team=team, url=url_full
+                    )
                     continue
 
                 # add metadata
-                df["_team"] = team
-                df["_competition"] = competition
-                df["_region"] = region
-                df["_area"] = area
+                df_stats_team["_team"] = team
+                df_stats_team["_competition"] = competition
+                df_stats_team["_region"] = region
+                df_stats_team["_area"] = area
 
                 # add to master list
-                list_of_dfs.append(df)
+                list_of_stats.append(df_stats_team)
 
-        df_teams = pd.concat(list_of_dfs).reset_index(drop=True)
+        df_standings = pd.concat(list_standings).reset_index(drop=True)
+        df_stats = pd.concat(list_of_stats).reset_index(drop=True)
 
-        return df_teams
+        return df_standings, df_stats
 
-    def parse_sporthalls(self):  # TODO: sporthalls information
-        """Parses the sportshalls information."""
-        pass
+    def parse_sporthalls(self, url_sportshalls, region):
+        """
+        Parses the sportshalls information based on the region-specific "sportshalls"
+        output (= url) from LZVCupScraper.parse_competitions_from_region_card().
+        """
+        area = self._area_name
 
-    def parse_competitions_standings(self):  # TODO: current competition standings
-        """Parses current historical competitions standings."""
-        pass
+        self._logger.info(f"Processing {area} - {region} > sportshalls")
 
-    def parse_team_stats_history(self):  # TODO: historical team standings
-        """Parses previous team competition standings."""
-        pass
+        # parse HTML
+        soup = self.make_soup(url_sportshalls)
+
+        # get all sportshalls cards
+        cards_all = soup.find_all("div", class_="card lzv2020card")
+
+        # extract names of sportshalls
+        sportshalls_names = [
+            self.clean_str(
+                card.find("h5", class_="card-title").get_text(strip=True)
+            ).split(": ")[1]
+            for card in cards_all
+        ]
+
+        # extract and clean info of sportshalls
+        sportshalls_info = [
+            card.find("p", class_="card-text")
+            .get_text(strip=True, separator="\n")
+            .splitlines()
+            for card in cards_all
+        ]
+
+        for info in sportshalls_info:
+            if len(info) > 3:
+                info.pop(2)  # removes likely second occurrence of phone number
+
+        # add together into a DataFrame
+        dict_sportshalls = dict(zip(sportshalls_names, sportshalls_info))
+        df = (
+            pd.DataFrame.from_dict(
+                dict_sportshalls, orient="index", columns=["address", "phone", "email"]
+            )
+            .reset_index()
+            .rename(columns={"index": "sportshall"})
+        )
+
+        # add metadata
+        df["_region"] = region
+        df["_area"] = area
+
+        return df
 
     @staticmethod
-    def parse_player_stats_history(name, url_full):
+    def parse_player_stats_history(
+        name, url_full
+    ):  # TODO: add to main.py script and config
         """
         Parses the historical statistics for a given player url into a pandas df.
 
@@ -128,8 +197,6 @@ class LZVCupParser(BaseScraper):
                 axis=1
             ).tolist()
         """
-        print(f"Parsing historical stats from {name} at {url_full}")
-
         # get page
         page = requests.get(url_full)
 
@@ -173,6 +240,51 @@ class LZVCupParser(BaseScraper):
         )
         return dict_teams
 
+    def _parse_competition_standings(self, soup):
+        """Parses current competitions standings."""
+        # get basic table HTML
+        table = soup.find("div", class_="items table-list lzvtable").find(
+            "ul", class_="item-list striped"
+        )
+
+        # parse column header
+        headers = [
+            "Ploeg",
+            "Gespeeld",
+            "Gewonnen",
+            "Gelijk",
+            "Verloren",
+            "DG",
+            "DT",
+            "DS",
+            "Punten",
+            "Ptn/M",
+        ]
+        # headers = [
+        #     self.clean_str(d.get_text())
+        #     for d in table.find("li", class_="item item-list-header").find_all(
+        #         "div", class_="item-col-header"
+        #     )
+        # ]
+
+        # grab rows
+        _, rows = self._parse_rows_from_table(table)
+
+        # assemble into a DataFrame
+        df = pd.DataFrame(rows, columns=headers)
+
+        # drop positions in the team names
+        df["Ploeg"] = np.where(
+            df.index <= 8,  # positions 1-9
+            df["Ploeg"].apply(lambda x: x[1:]),
+            df["Ploeg"].apply(lambda x: x[2:]),
+        )
+
+        # convert all but first column to numeric
+        df[headers[1:]] = df[headers[1:]].astype(float)
+
+        return df
+
     def _parse_team_stats(self, soup):
         """Parses player statistics (games, assists, goals, ...) into a pandas df."""
         # get basic table HTML
@@ -187,15 +299,7 @@ class LZVCupParser(BaseScraper):
         ]
 
         # grab rows
-        rows_html = [
-            li.find_all("div", attrs={"class": lambda x: x.startswith("item-col col-")})
-            for li in table.find_all("li", class_="item")[1:]
-        ]  # drops the header
-
-        # extract values row-by-row
-        rows = []
-        for player in rows_html:
-            rows.append([self.clean_str(item.get_text()) for item in player])
+        rows_html, rows = self._parse_rows_from_table(table)
 
         # assemble into a DataFrame
         df = pd.DataFrame(rows, columns=headers)
@@ -217,6 +321,36 @@ class LZVCupParser(BaseScraper):
 
         return df
 
+    def _parse_team_stats_history(self, soup):  # TODO: add to main.py script and config
+        """Parses previous team competition standings."""
+        # grab the raw HTML table with the historical standings
+        table = soup.find("table", {"class": "lzvtable"})
+
+        # compose the header
+        header = [th.get_text() for th in table.find("thead").find_all("th")][
+            :-1
+        ]  # drops orphan column
+
+        # compose the rows
+        rows_html = table.find("tbody").find_all(
+            "td"
+        )  # tr is not returned in the output...
+        rows = chunks(
+            [
+                el
+                for el in [self.clean_str(row_raw.get_text()) for row_raw in rows_html]
+                if el != ""
+            ],
+            3,  # len(header)
+        )
+
+        # stitch together into a DataFrame
+        df = pd.DataFrame(rows, columns=header)
+        df["Seizoen"] = df["Seizoen"].apply(lambda x: x[:9])  # 20xx-20xx
+        df["Positie"] = df["Positie"].astype(int)
+
+        return df
+
     def _parse_players_url_from_rows(self, rows_html):
         """Parses the player urls for given team as {player_name: url, ...}."""
         dict_players = {}
@@ -230,3 +364,17 @@ class LZVCupParser(BaseScraper):
                 }
             )
         return dict_players
+
+    def _parse_rows_from_table(self, table):
+        # grab rows
+        rows_html = [
+            li.find_all("div", attrs={"class": lambda x: x.startswith("item-col col-")})
+            for li in table.find_all("li", class_="item")[1:]  # drops the header
+        ]
+
+        # extract values row-by-row
+        rows = []
+        for player in rows_html:
+            rows.append([self.clean_str(item.get_text()) for item in player])
+
+        return rows_html, rows

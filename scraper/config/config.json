@@ -10,7 +10,9 @@
     },
     "output": {
         "dir_competitions_teams": "data/competitions_teams.json",
+        "dir_standings": "data/standings.csv",
         "dir_stats": "data/stats.csv",
-        "dir_stats_historical": "data/stats_historical.csv"
+        "dir_stats_historical": "data/stats_historical.csv",
+        "dir_sportshalls": "data/sportshalls.csv"
     }
 }

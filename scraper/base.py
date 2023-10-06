@@ -1,4 +1,5 @@
 import json
+import logging
 
 import pandas as pd
 import requests
@@ -6,7 +7,7 @@ from bs4 import BeautifulSoup
 
 
 class DataStorage:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @staticmethod
@@ -37,10 +38,12 @@ class DataStorage:
 
 
 class BaseScraper(DataStorage):
-    def __init__(self, config):
+    def __init__(self, config={}, logger=logging.getLogger()) -> None:
         """Assigns config keys as separate attributes prefixed with _."""
         for name, value in config.items():
             setattr(self, f"_{name}", value)
+
+        self._logger = logger
 
     def convert_to_full_url(self, url_end):
         """Joins 'url_end' with self._base_url."""
@@ -57,4 +60,4 @@ class BaseScraper(DataStorage):
 
     def clean_str(self, string):
         """Strips whitespaces and alike from a string."""
-        return string.replace("\n", "").replace("\t", "").strip()
+        return string.replace("\n", "").replace("\t", "").replace("\xa0", " ").strip()
