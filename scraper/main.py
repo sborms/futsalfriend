@@ -10,7 +10,8 @@ DIR_SCRIPT = os.path.dirname(os.path.abspath(__file__))
 
 
 def scrape(config):
-    dict_out, list_standings, list_stats, list_sportshalls = {}, [], [], []
+    dict_competitions_teams = {}
+    list_standings, list_stats, list_sportshalls = [], [], []
 
     base_url = config["base_url"]
     dict_areas = config["areas"]
@@ -54,14 +55,14 @@ def scrape(config):
             )
             list_sportshalls.append(df_sportshalls)
 
-        dict_out.update({area_name: dict_regions})
+        dict_competitions_teams.update({area_name: dict_regions})
 
     # gather DataFrames into one
     df_standings_all = pd.concat(list_standings, axis=0)
     df_stats_all = pd.concat(list_stats, axis=0)
     df_sportshalls_all = pd.concat(list_sportshalls, axis=0)
 
-    return dict_out, df_standings_all, df_stats_all, df_sportshalls_all
+    return dict_competitions_teams, df_standings_all, df_stats_all, df_sportshalls_all
 
 
 def store(

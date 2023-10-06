@@ -164,7 +164,7 @@ class LZVCupParser(BaseScraper):
             for card in cards_all
         ]
 
-        for info in sportshalls_info:
+        for info in sportshalls_info:  # TODO: fix when some info not available
             if len(info) > 3:
                 info.pop(2)  # removes likely second occurrence of phone number
 
