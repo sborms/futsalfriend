@@ -15,3 +15,9 @@ def chunks(lst, n):
     """Yields successive n-sized chunks from input list."""
     for i in range(0, len(lst), n):
         yield lst[i : i + n]
+
+
+def add_columns_to_df(df, dcols={}):
+    for cname, value in dcols.items():
+        df[cname] = value
+    return df

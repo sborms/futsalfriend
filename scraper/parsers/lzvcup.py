@@ -1,10 +1,11 @@
 import io
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
 import requests
 from base import BaseScraper
-from utils import chunks
+from utils import add_columns_to_df, chunks
 
 
 class LZVCupParser(BaseScraper):
@@ -75,9 +76,9 @@ class LZVCupParser(BaseScraper):
     def parse_standings_and_stats(self, dict_competitions, region):
         """
         Parses the competition standings and team stats based on the region-specific
-        "competitions" output from LZVCupScraper.parse_competitions_from_region_card().
+        "competitions" output from LZVCupParser.parse_competitions_from_region_card().
 
-        Note: this is slightly inefficient what concerns getting the standings
+        Note: this is slightly inefficient in getting the standings
         because the same HTML is parsed twice (once to get the team urls in another
         function call and once to get the standings).
         """
@@ -85,58 +86,65 @@ class LZVCupParser(BaseScraper):
             self._logger.warning(
                 "No competitions in input, returning None", region=region
             )
-            return None, None
+            return None, None, None
 
         area = self._area_name
 
-        list_standings, list_of_stats = [], []
+        list_standings, list_stats, list_palmares = [], [], []
         for competition, dict_teams in dict_competitions.items():
             self._logger.info(f"Processing {area} - {region} - {competition}")
+
+            # gather metadata into a dict
+            metadata = {"_area": area, "_region": region, "_competition": competition}
 
             # get standings for competition
             soup = self.make_soup(dict_teams["url"])
 
             # retrieve current standings
             df_standings = self._parse_competition_standings(soup)
-
-            df_standings["_competition"] = competition
-            df_standings["_region"] = region
-            df_standings["_area"] = area
+            df_standings = add_columns_to_df(df_standings, metadata)
 
             list_standings.append(df_standings)
 
             # get statistics for all teams
             for team, url_full in dict_teams["teams"].items():
+                # update metadata
+                metadata.update({"_team": team})
+
                 # parse HTML
                 soup = self.make_soup(url_full)
 
                 # get team stats
                 try:
                     df_stats_team = self._parse_team_stats(soup)
+                    df_stats_team = add_columns_to_df(df_stats_team, metadata)
+                    list_stats.append(df_stats_team)
                 except AttributeError:
                     self._logger.warning(
                         "No player info available", team=team, url=url_full
                     )
+
+                # get historical team standings
+                try:
+                    df_palmares_team = self._parse_team_palmares(soup)
+                    df_palmares_team = add_columns_to_df(df_palmares_team, metadata)
+                    list_palmares.append(df_palmares_team)
+                except AttributeError:
+                    self._logger.warning(
+                        "No palmares info available", team=team, url=url_full
+                    )
                     continue
 
-                # add metadata
-                df_stats_team["_team"] = team
-                df_stats_team["_competition"] = competition
-                df_stats_team["_region"] = region
-                df_stats_team["_area"] = area
-
-                # add to master list
-                list_of_stats.append(df_stats_team)
-
         df_standings = pd.concat(list_standings).reset_index(drop=True)
-        df_stats = pd.concat(list_of_stats).reset_index(drop=True)
+        df_stats = pd.concat(list_stats).reset_index(drop=True)
+        df_palmares = pd.concat(list_palmares).reset_index(drop=True)
 
-        return df_standings, df_stats
+        return df_standings, df_stats, df_palmares
 
     def parse_sporthalls(self, url_sportshalls, region):
         """
         Parses the sportshalls information based on the region-specific "sportshalls"
-        output (= url) from LZVCupScraper.parse_competitions_from_region_card().
+        output (= url) from LZVCupParser.parse_competitions_from_region_card().
         """
         area = self._area_name
 
@@ -164,9 +172,12 @@ class LZVCupParser(BaseScraper):
             for card in cards_all
         ]
 
-        for info in sportshalls_info:  # TODO: fix when some info not available
+        for info in sportshalls_info:
             if len(info) > 3:
                 info.pop(2)  # removes likely second occurrence of phone number
+            if len(info) == 2:
+                if "@" in info[1]:  # if no phone number
+                    info.insert(1, None)  # adds None for phone number
 
         # add together into a DataFrame
         dict_sportshalls = dict(zip(sportshalls_names, sportshalls_info))
@@ -179,47 +190,53 @@ class LZVCupParser(BaseScraper):
         )
 
         # add metadata
-        df["_region"] = region
-        df["_area"] = area
+        df = add_columns_to_df(df, {"_region": region, "_area": area})
 
         return df
 
     @staticmethod
-    def parse_player_stats_history(
-        name, url_full
-    ):  # TODO: add to main.py script and config
-        """
-        Parses the historical statistics for a given player url into a pandas df.
+    def parse_player_stats_history(df_stats, max_workers=10):
+        """Parses historical statistics for all players in input DataFrame."""
 
-        Example usage:
-            df_stats.apply(
-                lambda x: LZVCupScraper.parse_player_stats_history(x.Teamleden, x._url),
-                axis=1
-            ).tolist()
-        """
-        # get page
-        page = requests.get(url_full)
+        # create helper function to parse historical statistics for individual players
+        def _parse_player_stats_history(session, name, url_player):
+            # get page
+            page = session.get(url_player)
 
-        # grab table
-        df = pd.read_html(io.StringIO(page.text))[0]
+            # grab table
+            df = pd.read_html(io.StringIO(page.text))[0]
 
-        # reformat table
-        initial_cols = [
-            "Seizoen",
-            "Ploeg",
-            "Wedstrijden",
-            "Goals",
-            "Assists",
-            "Reeks",
-            "Stand",
-        ]
-        df.columns = initial_cols
+            # reformat table
+            initial_cols = [
+                "Seizoen",
+                "Ploeg",
+                "Wedstrijden",
+                "Goals",
+                "Assists",
+                "Reeks",
+                "Stand",
+            ]
+            df.columns = initial_cols
 
-        # add name
-        df["Name"] = name
+            # add name
+            df["Name"] = name
 
-        # reorder columns
-        df = df[["Name"] + initial_cols]
+            # reorder columns
+            df = df[["Name"] + initial_cols]
+
+            return df
+
+        n = len(df_stats)
+        with requests.Session() as session:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                res = executor.map(
+                    lambda k: _parse_player_stats_history(
+                        session, df_stats["Teamleden"].iloc[k], df_stats["_url"].iloc[k]
+                    ),
+                    range(n),
+                )
+
+            df = pd.concat(res)
 
         return df
 
@@ -321,8 +338,8 @@ class LZVCupParser(BaseScraper):
 
         return df
 
-    def _parse_team_stats_history(self, soup):  # TODO: add to main.py script and config
-        """Parses previous team competition standings."""
+    def _parse_team_palmares(self, soup):
+        """Parses previous team competition standings (= palmares)."""
         # grab the raw HTML table with the historical standings
         table = soup.find("table", {"class": "lzvtable"})
 

@@ -6,7 +6,7 @@ import structlog
 
 
 class Logger:
-    def __init__(self, log_name, log_file) -> None:
+    def __init__(self, log_name, log_file, level) -> None:
         # define basic configuration
         structlog.configure(
             processors=[
@@ -44,10 +44,13 @@ class Logger:
         root_logger = structlog.getLogger(log_name)
         root_logger.addHandler(console_handler)
         root_logger.addHandler(file_handler)
-        root_logger.setLevel("INFO")
 
-        # add logger to object
+        # set logging level
+        root_logger.setLevel(level)
+
+        # add logger to class instance
         self.logger = root_logger
 
-    def get_logger(self):
-        return self.logger
+    @classmethod
+    def get_logger(cls, log_name, log_file, level=logging.INFO):
+        return cls(log_name, log_file, level).logger

@@ -1,5 +1,8 @@
 {
     "base_url": "https://www.lzvcup.be",
+    "steps": {
+        "historical_players": true
+    },
     "areas": {
         "ANTWERPEN": "results/1",
         "BRUSSELS GEWEST": "results/2",
@@ -12,7 +15,8 @@
         "dir_competitions_teams": "data/competitions_teams.json",
         "dir_standings": "data/standings.csv",
         "dir_stats": "data/stats.csv",
-        "dir_stats_historical": "data/stats_historical.csv",
-        "dir_sportshalls": "data/sportshalls.csv"
+        "dir_palmares": "data/palmares.csv",
+        "dir_sportshalls": "data/sportshalls.csv",
+        "dir_stats_historical_players": "data/stats_historical_players.csv"
     }
 }
