@@ -1,8 +1,8 @@
 import json
-import logging
 
 import pandas as pd
 import requests
+import structlog
 from bs4 import BeautifulSoup
 
 
@@ -38,12 +38,15 @@ class DataStorage:
 
 
 class BaseScraper(DataStorage):
-    def __init__(self, config={}, logger=logging.getLogger()) -> None:
+    def __init__(self, config={}, logger=structlog.getLogger(), **kwargs) -> None:
         """Assigns config keys as separate attributes prefixed with _."""
         for name, value in config.items():
             setattr(self, f"_{name}", value)
 
         self._logger = logger
+
+        for name, value in kwargs.items():
+            setattr(self, name, value)
 
     def convert_to_full_url(self, url_end):
         """Joins 'url_end' with self._base_url."""

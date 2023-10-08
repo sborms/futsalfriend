@@ -4,13 +4,19 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 import requests
-from base import BaseScraper
-from utils import add_columns_to_df, chunks
+
+from scraper.utils.base import BaseScraper
+from scraper.utils.utils import add_columns_to_df, chunks
 
 
 class LZVCupParser(BaseScraper):
     def __init__(self, config, **kwargs) -> None:
-        """Config should minimally include: 'base_url', 'area_name', and 'area_url'."""
+        """
+        The config dictionary should include 'base_url', 'area_name', and 'area_url'.
+        Keys from the config will be stored with a _ prefix as attributes of the class.
+        Additional keyword arguments won't have such prefix, except for the optional
+        logger= argument, which will be stored as self._logger.
+        """
         super().__init__(config, **kwargs)
 
         # complete area url

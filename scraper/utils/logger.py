@@ -10,7 +10,7 @@ class Logger:
         # define basic configuration
         structlog.configure(
             processors=[
-                structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S"),
+                structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
                 structlog.stdlib.add_log_level,
                 structlog.stdlib.add_logger_name,
                 structlog.processors.StackInfoRenderer(),

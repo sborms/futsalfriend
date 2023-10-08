@@ -1,13 +1,17 @@
 import os
+import sys
 
 import pandas as pd
-from base import DataStorage
-from logger import Logger
-from parsers.lzvcup import LZVCupParser
-from utils import ymd
 
 DIR_SCRIPT = os.path.dirname(os.path.abspath(__file__))
-DIR_LOGS = f"{DIR_SCRIPT}/logs/{ymd()}/"  # create a new log directory for each day
+sys.path.append(os.path.dirname(DIR_SCRIPT))  # so we can keep main.py in scraper/
+
+from scraper.parsers.lzvcup import LZVCupParser
+from scraper.utils.base import DataStorage
+from scraper.utils.logger import Logger
+from scraper.utils.utils import ymd
+
+DIR_LOGS = f"{DIR_SCRIPT}/logs/{ymd()}/"  # subdivide logs by day of script execution
 
 
 def scrape(config, log_main):
@@ -45,7 +49,7 @@ def scrape(config, log_main):
             )
             dict_regions[region] = competitions
 
-            # get current competition standings and player statistics per team
+            # get current competition standings, player statistics, and team palmares
             df_standings, df_stats, df_palmares = parser.parse_standings_and_stats(
                 dict_competitions=competitions["competitions"], region=region
             )
@@ -68,7 +72,7 @@ def scrape(config, log_main):
     df_palmares_all = pd.concat(list_palmares, axis=0)
     df_sportshalls_all = pd.concat(list_sportshalls, axis=0)
 
-    # get historical player statistics
+    # get historical player statistics if enabled in config
     if config["steps"]["historical_players"] is True:
         log_main.info(f"Processing all historical player statistics")
         df_stats_historical_players = LZVCupParser.parse_player_stats_history(

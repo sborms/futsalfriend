@@ -2,9 +2,9 @@ name: Run CI/CD pipeline
 
 on:
   push:
-    # branches: [ "main" ]
-    branches-ignore:    
-      - "main"
+    branches: [ "main" ]
+    # branches-ignore:    
+    #   - "main"
   pull_request:
     branches: [ "main" ]
   # allow manual trigger  

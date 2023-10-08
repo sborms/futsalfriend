@@ -27,7 +27,7 @@ test:
 	python -m pytest -vv
 
 scrape:
-	@echo ">>> Scraping data from PCS"
+	@echo ">>> Scraping data from LZV Cup"
 	python ./scraper/main.py
 
 push:
