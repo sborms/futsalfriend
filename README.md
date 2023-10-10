@@ -10,9 +10,11 @@
 
 :smirk: Do you care to analyse vanity statistics?
 
+**Futsal Friend** is a small web application built using player and competition data from [Liefhebbers Zaalvoetbal Cup](https://www.lzvcup.be/), a Belgian futsal organisation counting over 900 teams. Its usefulness is not limited to players from one of the LZV Cup leagues.
+
 ## Scraping
 
-The scraping part includes some nice logging. See below! For more information about the logging setup, this [Medium post](https://medium.com/@sborms/while-my-python-script-gently-logs-2a3491338ecd) helps.
+The scraping component includes some nice logging. See below! For more information about the logging setup, this [Medium post](https://medium.com/@sborms/while-my-python-script-gently-logs-2a3491338ecd) helps.
 
 <p align="center"> <img src="assets/showofflogs.png" alt="logs"/> </p>
 
