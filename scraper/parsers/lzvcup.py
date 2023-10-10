@@ -115,7 +115,7 @@ class LZVCupParser(BaseScraper):
             # get statistics for all teams
             for team, url_full in dict_teams["teams"].items():
                 # update metadata
-                metadata.update({"_team": team})
+                metadata.update({"Team": team})
 
                 # parse HTML
                 soup = self.make_soup(url_full)
@@ -215,7 +215,7 @@ class LZVCupParser(BaseScraper):
             # reformat table
             initial_cols = [
                 "Seizoen",
-                "Ploeg",
+                "Team",
                 "Wedstrijden",
                 "Goals",
                 "Assists",
@@ -232,14 +232,18 @@ class LZVCupParser(BaseScraper):
 
             return df
 
-        n = len(df_stats)
+        # drop duplicates first as some players may play in multiple teams
+        df_players = df_stats[["Name", "_url"]].drop_duplicates()
+
         with requests.Session() as session:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 res = executor.map(
                     lambda k: _parse_player_stats_history(
-                        session, df_stats["Teamleden"].iloc[k], df_stats["_url"].iloc[k]
+                        session,
+                        df_players["Name"].iloc[k],
+                        df_players["_url"].iloc[k],
                     ),
-                    range(n),
+                    range(len(df_players)),
                 )
 
             df = pd.concat(res)
@@ -272,7 +276,7 @@ class LZVCupParser(BaseScraper):
 
         # parse column header
         headers = [
-            "Ploeg",
+            "Team",
             "Gespeeld",
             "Gewonnen",
             "Gelijk",
@@ -297,10 +301,10 @@ class LZVCupParser(BaseScraper):
         df = pd.DataFrame(rows, columns=headers)
 
         # drop positions in the team names
-        df["Ploeg"] = np.where(
+        df["Team"] = np.where(
             df.index <= 8,  # positions 1-9
-            df["Ploeg"].apply(lambda x: x[1:]),
-            df["Ploeg"].apply(lambda x: x[2:]),
+            df["Team"].apply(lambda x: x[1:]),
+            df["Team"].apply(lambda x: x[2:]),
         )
 
         # convert all but first column to numeric
@@ -325,18 +329,18 @@ class LZVCupParser(BaseScraper):
         rows_html, rows = self._parse_rows_from_table(table)
 
         # assemble into a DataFrame
-        df = pd.DataFrame(rows, columns=headers)
+        df = pd.DataFrame(rows, columns=headers).rename(columns={"Teamleden": "Name"})
 
         # get the url for each player
         dict_players = self._parse_players_url_from_rows(rows_html)
         df_players_url = (
             pd.DataFrame.from_dict(dict_players, orient="index", columns=["_url"])
             .reset_index()
-            .rename(columns={"index": "Teamleden"})
+            .rename(columns={"index": "Name"})
         )
 
         # merge url's with main DataFrame
-        df = pd.merge(df, df_players_url, on="Teamleden", how="left")
+        df = pd.merge(df, df_players_url, on="Name", how="left")
 
         # convert certain columns to numeric
         num_cols = ["Wedstrijden", "Goals", "Assists"]
