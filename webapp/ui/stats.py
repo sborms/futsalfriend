@@ -2,16 +2,12 @@ import plotly.express as px
 import streamlit as st
 
 
-def filter_stats(df_stats, df_filt, min_w):
-    df_stats = (
-        df_stats.query(f"Wedstrijden >= {min_w}")
-        .merge(
-            df_filt,
-            on=["Name", "Team"],
-            how="inner",
-        )[["Name", "Team", "Wedstrijden", "Goals", "Assists", "(G+A)/W"]]
-        .drop_duplicates()
-    )  # safety measure
+def filter_stats(df_stats_agg, df_filt, min_w):
+    df_stats = df_stats_agg.query(f"Wedstrijden >= {min_w}").merge(
+        df_filt,
+        on=["Name", "Team"],
+        how="inner",
+    )[["Name", "Team", "Wedstrijden", "Goals", "Assists", "(G+A)/W"]]
 
     return df_stats
 
@@ -33,44 +29,48 @@ def make_page_vanity_stats(df_players, df_stats_agg):
     dict_filters = {}
 
     # iteratively propose and adjust filters
-    dict_filters.update(
-        {"_area": st.multiselect("Areas", df_players["_area"].unique())}
-    )
-    df_players = filter_players(df_players, dict_filters)
+    row1col1, row1col2, row1col3 = st.columns(3)
+    row2col1, row2col2 = st.columns(2)
 
-    dict_filters.update(
-        {"_region": st.multiselect("Regions", df_players["_region"].unique())}
-    )
-    df_players = filter_players(df_players, dict_filters)
+    with row1col1:
+        dict_filters.update(
+            {"_area": st.multiselect("Areas", df_players["_area"].unique())}
+        )
+        df_players = filter_players(df_players, dict_filters)
+    with row1col2:
+        dict_filters.update(
+            {"_region": st.multiselect("Regions", df_players["_region"].unique())}
+        )
+        df_players = filter_players(df_players, dict_filters)
+    with row1col3:
+        dict_filters.update(
+            {
+                "_competition": st.multiselect(
+                    "Competitions", df_players["_competition"].unique()
+                )
+            }
+        )
+        df_players = filter_players(df_players, dict_filters)
+    with row2col1:
+        dict_filters.update(
+            {"Team": st.multiselect("Teams", df_players["Team"].unique())}
+        )
+        df_players = filter_players(df_players, dict_filters)
+    with row2col2:
+        dict_filters.update(
+            {"Name": st.multiselect("Players", df_players["Name"].unique())}
+        )
+        df_players = filter_players(df_players, dict_filters)
 
-    dict_filters.update(
-        {
-            "_competition": st.multiselect(
-                "Competitions", df_players["_competition"].unique()
-            )
-        }
-    )
-    df_players = filter_players(df_players, dict_filters)
-
-    dict_filters.update({"Team": st.multiselect("Teams", df_players["Team"].unique())})
-    df_players = filter_players(df_players, dict_filters)
-
-    dict_filters.update(
-        {"Name": st.multiselect("Players", df_players["Name"].unique())}
-    )
-    df_players = filter_players(df_players, dict_filters)
-
-    df_players = df_players.drop(
-        columns=["_area", "_region", "_competition"]
-    ).drop_duplicates()
+    df_players = df_players.drop(columns=["_area", "_region", "_competition"])
 
     st.markdown("#### All-time statistics")
 
-    # get desired statistic input
+    # get desired metric, minimum number of games played and plot type
     col1, col2, col3 = st.columns(3)
     with col1:
         stat_col = st.selectbox(
-            "Statistic", ["Wedstrijden", "Goals", "Assists", "(G+A)/W"], index=2
+            "Statistic", ["Wedstrijden", "Goals", "Assists", "(G+A)/W"], index=1
         )
     with col2:
         min_w = st.number_input("Minimum games played", min_value=1, value=5, step=1)

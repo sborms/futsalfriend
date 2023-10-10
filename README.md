@@ -12,7 +12,7 @@
 
 ## Scraping
 
-The scraping part includes some nice logging. See below! For more information about the setup, this [Medium post](https://medium.com/@sborms/while-my-python-script-gently-logs-2a3491338ecd) helps.
+The scraping part includes some nice logging. See below! For more information about the logging setup, this [Medium post](https://medium.com/@sborms/while-my-python-script-gently-logs-2a3491338ecd) helps.
 
 <p align="center"> <img src="assets/showofflogs.png" alt="logs"/> </p>
 

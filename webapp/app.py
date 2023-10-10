@@ -27,8 +27,8 @@ def load_stats(path, **kwargs):
 @st.cache_data
 def pre_aggregate_stats(df_p, df_h):
     # merge players and metadata (_p) with historical (_h) stats
-    df_agg = df_p.drop_duplicates().merge(
-        df_h.drop(columns=["Reeks", "Stand"]).drop_duplicates(),
+    df_agg = df_p.merge(
+        df_h.drop(columns=["Reeks", "Stand"]),
         on=["Name", "Team"],
     )
 
@@ -40,7 +40,7 @@ def pre_aggregate_stats(df_p, df_h):
     # add an overall efficiency statistic
     df_agg["(G+A)/W"] = (df_agg["Goals"] + df_agg["Assists"]) / df_agg["Wedstrijden"]
 
-    # remove irrelevant information
+    # remove single-season information
     df_agg = df_agg.drop(columns=["Seizoen"])
     df_agg = df_agg.drop_duplicates()
 
@@ -49,10 +49,8 @@ def pre_aggregate_stats(df_p, df_h):
 
 df_players = load_stats(
     "data/stats.csv", usecols=["Name", "Team", "_competition", "_region", "_area"]
-)
+).drop_duplicates()  # some players appear twice due to errors in the source data
 df_stats_historical = load_stats("data/stats_historical_players.csv")
-
-df_stats_agg = pre_aggregate_stats(df_players, df_stats_historical)
 
 #################
 ###### app ######
@@ -79,4 +77,5 @@ elif page == NAVBAR_OPTIONS[2]:
 elif page == NAVBAR_OPTIONS[3]:
     make_page_coachbot()
 elif page == NAVBAR_OPTIONS[4]:
+    df_stats_agg = pre_aggregate_stats(df_players, df_stats_historical)
     make_page_vanity_stats(df_players, df_stats_agg)
