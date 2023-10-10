@@ -10,7 +10,7 @@
 
 :smirk: Do you care to analyse vanity statistics?
 
-**Futsal Friend** is a small web application built using player and competition data from [Liefhebbers Zaalvoetbal Cup](https://www.lzvcup.be/), a Belgian futsal organisation counting over 900 teams. Its usefulness is not limited to players from one of the LZV Cup leagues.
+**Futsal Friend** is a small web application built using player and competition data from [Liefhebbers Zaalvoetbal Cup](https://www.lzvcup.be/) (LZV Cup), a Belgian futsal organisation counting over 900 teams. Its usefulness is not limited to players from one of the LZV Cup leagues.
 
 ## Scraping
 
