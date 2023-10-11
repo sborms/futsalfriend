@@ -79,37 +79,42 @@ class LZVCupParser(BaseScraper):
             "sportshalls": sportshalls,
         }
 
-    def parse_standings_and_stats(self, dict_competitions, region):
+    def parse_competitions_and_teams(self, dict_competitions, region):
         """
-        Parses the competition standings and team stats based on the region-specific
-        "competitions" output from LZVCupParser.parse_competitions_from_region_card().
+        Parses information from each competition page (schedule, standings) and each
+        team (player stats, palmares) within the region-specific "competitions"
+        output from LZVCupParser.parse_competitions_from_region_card().
 
-        Note: this is slightly inefficient in getting the standings
+        Note: this is slightly inefficient in getting the schedule & standings
         because the same HTML is parsed twice (once to get the team urls in another
-        function call and once to get the standings).
+        function call and once to get the schedule & standings).
         """
         if len(dict_competitions) == 0:
             self._logger.warning(
                 "No competitions in input, returning None", region=region
             )
-            return None, None, None
+            return [None for _ in range(4)]
 
         area = self._area_name
 
-        list_standings, list_stats, list_palmares = [], [], []
+        list_schedules, list_standings, list_stats, list_palmares = [], [], [], []
         for competition, dict_teams in dict_competitions.items():
             self._logger.info(f"Processing {area} - {region} - {competition}")
 
             # gather metadata into a dict
             metadata = {"_area": area, "_region": region, "_competition": competition}
 
-            # get standings for competition
+            # get competition page as HTML
             soup = self.make_soup(dict_teams["url"])
+
+            # retrieve schedule with results
+            df_schedule = self._parse_competition_schedule(soup)
+            df_schedule = add_columns_to_df(df_schedule, metadata)
+            list_schedules.append(df_schedule)
 
             # retrieve current standings
             df_standings = self._parse_competition_standings(soup)
             df_standings = add_columns_to_df(df_standings, metadata)
-
             list_standings.append(df_standings)
 
             # get statistics for all teams
@@ -140,12 +145,13 @@ class LZVCupParser(BaseScraper):
                         "No palmares info available", team=team, url=url_full
                     )
                     continue
-
+        
+        df_schedules = pd.concat(list_schedules).reset_index(drop=True)
         df_standings = pd.concat(list_standings).reset_index(drop=True)
         df_stats = pd.concat(list_stats).reset_index(drop=True)
         df_palmares = pd.concat(list_palmares).reset_index(drop=True)
 
-        return df_standings, df_stats, df_palmares
+        return df_schedules, df_standings, df_stats, df_palmares
 
     def parse_sporthalls(self, url_sportshalls, region):
         """
@@ -267,9 +273,59 @@ class LZVCupParser(BaseScraper):
         )
         return dict_teams
 
+    def _parse_competition_schedule(self, soup):
+        """Parses competition schedule and results."""
+        # get basic table structure in HTML
+        list_games_raw = [
+            div.find("ul", class_="item-list striped")
+            for div in soup.find_all(
+                "div", class_="items calendar-list"
+            )  # first of two items is collapsable
+        ]
+
+        # grab rows
+        rows_all = []
+        for games_raw in list_games_raw:
+            _, rows = self._parse_rows_from_table(games_raw, drop_header=0)
+            rows_all.extend(rows)
+
+        for j, row in enumerate(rows_all):
+            if row[0] == "Nog te plannen":
+                break
+            # refactor match time info into two elements (date, hour)
+            dayhour = row.pop(0)[-11:].split(" ")  # [dd/mm, HHuMM]
+            row.insert(0, dayhour[1])
+            row.insert(0, dayhour[0])
+
+            # refactor score into two elements (home goals, out goals)
+            score = row[3]
+            if score in ["In behandeling", "-"]:  # match hasn't been played yet
+                row[3] = None
+                row.insert(5, None)
+            else:
+                row[3] = int(score[0])
+                row.insert(5, int(score[-1]))  # put after away team
+
+            # drop last element which is empty
+            row.pop(-1)
+
+        # assemble into a DataFrame
+        headers = [
+            "date",
+            "hour",
+            "team_home",
+            "goals_home",
+            "team_away",
+            "goals_away",
+            "sportshall",
+        ]
+        df = pd.DataFrame(rows_all[:j], columns=headers)
+
+        return df
+    
     def _parse_competition_standings(self, soup):
-        """Parses current competitions standings."""
-        # get basic table HTML
+        """Parses current competition standings."""
+        # get basic table structure in HTML
         table = soup.find("div", class_="items table-list lzvtable").find(
             "ul", class_="item-list striped"
         )
@@ -314,7 +370,7 @@ class LZVCupParser(BaseScraper):
 
     def _parse_team_stats(self, soup):
         """Parses player statistics (games, assists, goals, ...) into a pandas df."""
-        # get basic table HTML
+        # get basic table structure in HTML
         table = soup.find("ul", class_="item-list striped")
 
         # parse column header
@@ -392,16 +448,16 @@ class LZVCupParser(BaseScraper):
             )
         return dict_players
 
-    def _parse_rows_from_table(self, table):
+    def _parse_rows_from_table(self, table, drop_header=1):
         # grab rows
         rows_html = [
             li.find_all("div", attrs={"class": lambda x: x.startswith("item-col col-")})
-            for li in table.find_all("li", class_="item")[1:]  # drops the header
+            for li in table.find_all("li", class_="item")[drop_header:]
         ]
 
         # extract values row-by-row
         rows = []
-        for player in rows_html:
-            rows.append([self.clean_str(item.get_text()) for item in player])
+        for row in rows_html:
+            rows.append([self.clean_str(item.get_text()) for item in row])
 
         return rows_html, rows

@@ -17,7 +17,7 @@ DIR_LOGS = f"{DIR_SCRIPT}/logs/{ymd()}/"  # subdivide logs by day of script exec
 def scrape(config, log_main):
     # initialize output variables
     dict_competitions_teams = {}
-    list_standings, list_stats, list_palmares, list_sportshalls = [], [], [], []
+    list_schedules, list_standings, list_stats, list_palmares, list_sportshalls = [], [], [], [], []
     df_stats_historical_players = None
 
     base_url = config["base_url"]
@@ -49,10 +49,11 @@ def scrape(config, log_main):
             )
             dict_regions[region] = competitions
 
-            # get current competition standings, player statistics, and team palmares
-            df_standings, df_stats, df_palmares = parser.parse_standings_and_stats(
+            # get competition schedule & standings, player statistics, and team palmares
+            df_schedules, df_standings, df_stats, df_palmares = parser.parse_competitions_and_teams(
                 dict_competitions=competitions["competitions"], region=region
             )
+            list_schedules.append(df_schedules)
             list_standings.append(df_standings)
             list_stats.append(df_stats)
             list_palmares.append(df_palmares)
@@ -67,6 +68,7 @@ def scrape(config, log_main):
         log_main.info(f"Area {area_name} successfully processed")
 
     # gather lists into single DataFrames
+    df_schedules_all = pd.concat(list_schedules, axis=0)
     df_standings_all = pd.concat(list_standings, axis=0)
     df_stats_all = pd.concat(list_stats, axis=0)
     df_palmares_all = pd.concat(list_palmares, axis=0)
@@ -81,6 +83,7 @@ def scrape(config, log_main):
 
     return (
         dict_competitions_teams,
+        df_schedules_all,
         df_standings_all,
         df_stats_all,
         df_palmares_all,
@@ -92,6 +95,7 @@ def scrape(config, log_main):
 def store(
     config,
     dict_competitions_teams,
+    df_schedules_all,
     df_standings,
     df_stats,
     df_palmares,
@@ -99,13 +103,16 @@ def store(
     df_stats_historical_players=None,
 ):
     dir_competitions_teams = config["output"]["dir_competitions_teams"]
+    dir_schedules = config["output"]["dir_schedules"]
     dir_standings = config["output"]["dir_standings"]
     dir_stats = config["output"]["dir_stats"]
     dir_palmares = config["output"]["dir_palmares"]
     dir_sportshalls = config["output"]["dir_sportshalls"]
 
     DataStorage.store_json(dict_competitions_teams, dir=dir_competitions_teams)
+
     DataStorage.store_csv(df_standings, dir=dir_standings, index=False)
+    DataStorage.store_csv(df_schedules_all, dir=dir_schedules, index=False)
     DataStorage.store_csv(df_stats, dir=dir_stats, index=False)
     DataStorage.store_csv(df_palmares, dir=dir_palmares, index=False)
     DataStorage.store_csv(df_sportshalls, dir=dir_sportshalls, index=False)
@@ -132,6 +139,7 @@ if __name__ == "__main__":
 
     (
         dict_competitions_teams,
+        df_schedules_all,
         df_standings_all,
         df_stats_all,
         df_palmares_all,
@@ -143,6 +151,7 @@ if __name__ == "__main__":
     store(
         config,
         dict_competitions_teams,
+        df_schedules_all,
         df_standings_all,
         df_stats_all,
         df_palmares_all,
