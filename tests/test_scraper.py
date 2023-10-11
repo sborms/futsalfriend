@@ -31,7 +31,7 @@ def test_parse_region_cards_and_competitions_from_region_card():
     assert competitions.keys() == {"competitions", "sportshalls"}
 
 
-def test_parse_standings_and_stats():
+def test_parse_competitions_and_teams():
     dict_competitions = {
         "1e Klasse": {
             "url": "https://www.lzvcup.be/results/5/16/1",
@@ -55,10 +55,16 @@ def test_parse_standings_and_stats():
         },
     }
 
-    df_standings, df_stats, df_palmares = parser.parse_standings_and_stats(
+    (
+        df_schedules,
+        df_standings,
+        df_stats,
+        df_palmares,
+    ) = parser.parse_competitions_and_teams(
         dict_competitions=dict_competitions, region=parser.region
     )
 
+    assert len(df_schedules) > 0
     assert len(df_standings) > 0
     assert len(df_stats) > 0
     assert len(df_palmares) > 0

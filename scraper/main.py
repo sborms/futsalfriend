@@ -17,7 +17,13 @@ DIR_LOGS = f"{DIR_SCRIPT}/logs/{ymd()}/"  # subdivide logs by day of script exec
 def scrape(config, log_main):
     # initialize output variables
     dict_competitions_teams = {}
-    list_schedules, list_standings, list_stats, list_palmares, list_sportshalls = [], [], [], [], []
+    list_schedules, list_standings, list_stats, list_palmares, list_sportshalls = (
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
     df_stats_historical_players = None
 
     base_url = config["base_url"]
@@ -50,7 +56,12 @@ def scrape(config, log_main):
             dict_regions[region] = competitions
 
             # get competition schedule & standings, player statistics, and team palmares
-            df_schedules, df_standings, df_stats, df_palmares = parser.parse_competitions_and_teams(
+            (
+                df_schedules,
+                df_standings,
+                df_stats,
+                df_palmares,
+            ) = parser.parse_competitions_and_teams(
                 dict_competitions=competitions["competitions"], region=region
             )
             list_schedules.append(df_schedules)

@@ -145,7 +145,7 @@ class LZVCupParser(BaseScraper):
                         "No palmares info available", team=team, url=url_full
                     )
                     continue
-        
+
         df_schedules = pd.concat(list_schedules).reset_index(drop=True)
         df_standings = pd.concat(list_standings).reset_index(drop=True)
         df_stats = pd.concat(list_stats).reset_index(drop=True)
@@ -300,8 +300,8 @@ class LZVCupParser(BaseScraper):
             # refactor score into two elements (home goals, out goals)
             score = row[3]
             if score in ["In behandeling", "-"]:  # match hasn't been played yet
-                row[3] = None
-                row.insert(5, None)
+                row[3] = np.nan
+                row.insert(5, np.nan)
             else:
                 row[3] = int(score[0])
                 row.insert(5, int(score[-1]))  # put after away team
@@ -322,7 +322,7 @@ class LZVCupParser(BaseScraper):
         df = pd.DataFrame(rows_all[:j], columns=headers)
 
         return df
-    
+
     def _parse_competition_standings(self, soup):
         """Parses current competition standings."""
         # get basic table structure in HTML
