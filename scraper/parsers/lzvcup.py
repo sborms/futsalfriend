@@ -12,7 +12,7 @@ from scraper.utils.utils import add_columns_to_df, chunks
 class LZVCupParser(BaseScraper):
     def __init__(self, config, **kwargs) -> None:
         """
-        The config dictionary should include 'base_url', 'area_name', and 'area_url'.
+        The config dictionary should include 'url_base', 'area', and 'url_area'.
         Keys from the config will be stored with a _ prefix as attributes of the class.
         Additional keyword arguments won't have such prefix, except for the optional
         logger= argument, which will be stored as self._logger.
@@ -20,16 +20,18 @@ class LZVCupParser(BaseScraper):
         super().__init__(config, **kwargs)
 
         # complete area url
-        if "_area_url" in dir(self):
-            self._area_url = self.convert_to_full_url(self._area_url)
+        if "_url_area" in dir(self):
+            self._url_area = self.convert_to_full_url(self._url_area)
 
     def parse_region_cards(self):
         """Parses the region cards which display the competitions for each region."""
+        area = self._area
+
         # get HTML
-        soup = self.make_soup(self._area_url)
+        soup = self.make_soup(self._url_area)
 
         # get regions in specific area (e.g. Regio Lier in Antwerpen)
-        regions_names = [
+        region_names = [
             self.clean_str(s.get_text())
             for s in soup.find_all(
                 "button", class_="btn btn-link btn-block text-left collapsed"
@@ -37,174 +39,206 @@ class LZVCupParser(BaseScraper):
         ]
 
         # get cards with the information about the competitions in each region
-        regions_competitions_cards = soup.find_all("div", class_="card-body row")
+        region_cards = soup.find_all("div", class_="card-body row")
 
         # check that regions found correspond to parsed cards
-        assert len(regions_names) == len(
-            regions_competitions_cards
+        assert len(region_names) == len(
+            region_cards
         ), "Number of regions is inconsistent"
 
-        return dict(zip(regions_names, regions_competitions_cards))
+        dict_regions = dict(zip(region_names, region_cards))
 
-    def parse_competitions_from_region_card(self, region_competition_card):
-        """Parses each competition and the respective teams for given region."""
-        # get the name sof the competition (e.g. 2e Klasse)
+        # get the names of the competition (e.g. 2e Klasse)
         # or the sporthalls locations together with the respective page url
-        card_elements = region_competition_card.find_all(
-            "a", class_="btn btn-outline-primary"
+        rows_sportshalls, rows_competitions = [], []
+        for region, region_card in dict_regions.items():
+            card_elements = region_card.find_all("a", class_="btn btn-outline-primary")
+
+            for a in card_elements:
+                key, url_end = self.clean_str(a.get_text()), a.get(
+                    "href"
+                )  # e.g. "2e Klasse", "results/1/13/2"
+                url_full = self.convert_to_full_url(url_end)
+                if key == "Sporthallen":
+                    rows_sportshalls.append([area, region, url_full])
+                else:
+                    rows_competitions.append([area, region, key, url_full])
+
+        df_sportshalls_urls = pd.DataFrame(
+            rows_sportshalls, columns=["area", "region", "url"]
         )
-        competitions, sportshalls = {}, None
-        for a in card_elements:
-            key, url_end = self.clean_str(a.get_text()), a.get(
-                "href"
-            )  # e.g. "2e Klasse", "results/1/13/2"
-            url_full = self.convert_to_full_url(url_end)
-            if key == "Sporthallen":
-                sportshalls = url_full
-            else:
-                competitions[key] = url_full
+        df_competitions_urls = pd.DataFrame(
+            rows_competitions, columns=["area", "region", "competition", "url"]
+        )
 
-        # get the teams for each competition
-        dict_competitions = {}
-        for competition, url_full in competitions.items():
-            # get HTML
-            soup = self.make_soup(url_full)
+        return df_sportshalls_urls, df_competitions_urls
 
-            # get teams from table and associate it to competition key
-            dict_teams = self._parse_urls_teams(soup)
-            dict_competitions[competition] = {"url": url_full, "teams": dict_teams}
-
-        return {
-            "competitions": dict_competitions,
-            "sportshalls": sportshalls,
-        }
-
-    def parse_competitions_and_teams(self, dict_competitions, region):
+    def parse_competitions_and_teams(self, df_competitions_urls):
         """
-        Parses information from each competition page (schedule, standings) and each
-        team (player stats, palmares) within the region-specific "competitions"
-        output from LZVCupParser.parse_competitions_from_region_card().
+        Parses following information from a competitions page:
+        - Teams and their respective urls
+        - Schedule with results
+        - Current standings
+        - Player statistics
+        - Team palmares
 
-        Note: this is slightly inefficient in getting the schedule & standings
-        because the same HTML is parsed twice (once to get the team urls in another
-        function call and once to get the schedule & standings).
+        The input is the area-specific competitions output from
+        LZVCupParser.parse_region_cards().
         """
-        if len(dict_competitions) == 0:
-            self._logger.warning(
-                "No competitions in input, returning None", region=region
-            )
-            return [None for _ in range(4)]
+        area = self._area
 
-        area = self._area_name
-
-        list_schedules, list_standings, list_stats, list_palmares = [], [], [], []
-        for competition, dict_teams in dict_competitions.items():
+        list_teams, list_schedules, list_standings, list_stats, list_palmares = (
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
+        for (
+            _,
+            _,
+            region,
+            competition,
+            url_competition,
+        ) in df_competitions_urls.itertuples():
             self._logger.info(f"Processing {area} - {region} - {competition}")
 
-            # gather metadata into a dict
-            metadata = {"_area": area, "_region": region, "_competition": competition}
-
             # get competition page as HTML
-            soup = self.make_soup(dict_teams["url"])
+            soup_competition = self.make_soup(url_competition)
+
+            # get teams for given competition
+            dict_teams = self._parse_urls_teams(soup_competition)
+            df_teams = (
+                pd.DataFrame.from_dict(dict_teams, orient="index", columns=["URL"])
+                .reset_index()
+                .rename(columns={"index": "TEAM"})
+            )
+            df_teams = add_columns_to_df(
+                df_teams, {"area": area, "region": region, "competition": competition}
+            )
+
+            # prepare teams output
+            list_teams.append(df_teams)
+
+            # gather metadata into a dict
+            metadata = {"area": area, "region": region, "competition": competition}
 
             # retrieve schedule with results
-            df_schedule = self._parse_competition_schedule(soup)
+            df_schedule = self._parse_competition_schedule(soup_competition)
             df_schedule = add_columns_to_df(df_schedule, metadata)
             list_schedules.append(df_schedule)
 
             # retrieve current standings
-            df_standings = self._parse_competition_standings(soup)
+            df_standings = self._parse_competition_standings(soup_competition)
             df_standings = add_columns_to_df(df_standings, metadata)
             list_standings.append(df_standings)
 
             # get statistics for all teams
-            for team, url_full in dict_teams["teams"].items():
+            for team, url_team in dict_teams.items():
                 # update metadata
-                metadata.update({"Team": team})
+                metadata.update({"team": team})
 
                 # parse HTML
-                soup = self.make_soup(url_full)
+                soup_team = self.make_soup(url_team)
 
                 # get team stats
                 try:
-                    df_stats_team = self._parse_team_stats(soup)
+                    df_stats_team = self._parse_team_stats(soup_team)
                     df_stats_team = add_columns_to_df(df_stats_team, metadata)
                     list_stats.append(df_stats_team)
                 except AttributeError:
                     self._logger.warning(
-                        "No player info available", team=team, url=url_full
+                        "No player info available", team=team, url=url_team
                     )
 
                 # get historical team standings
                 try:
-                    df_palmares_team = self._parse_team_palmares(soup)
+                    df_palmares_team = self._parse_team_palmares(soup_team)
                     df_palmares_team = add_columns_to_df(df_palmares_team, metadata)
                     list_palmares.append(df_palmares_team)
                 except AttributeError:
                     self._logger.warning(
-                        "No palmares info available", team=team, url=url_full
+                        "No palmares info available", team=team, url=url_team
                     )
                     continue
 
+        df_teams = pd.concat(list_teams, axis=0).reset_index(drop=True)
         df_schedules = pd.concat(list_schedules).reset_index(drop=True)
         df_standings = pd.concat(list_standings).reset_index(drop=True)
         df_stats = pd.concat(list_stats).reset_index(drop=True)
         df_palmares = pd.concat(list_palmares).reset_index(drop=True)
 
-        return df_schedules, df_standings, df_stats, df_palmares
+        return df_teams, df_schedules, df_standings, df_stats, df_palmares
 
-    def parse_sporthalls(self, url_sportshalls, region):
+    def parse_sporthalls(self, df_sportshalls_urls):
         """
-        Parses the sportshalls information based on the region-specific "sportshalls"
-        output (= url) from LZVCupParser.parse_competitions_from_region_card().
+        Parses the sportshalls information based on the area-specific sportshalls
+        output from LZVCupParser.parse_region_cards().
         """
-        area = self._area_name
+        area = self._area
 
-        self._logger.info(f"Processing {area} - {region} > sportshalls")
+        list_dfs = []
+        for _, _, region, url_sportshalls in df_sportshalls_urls.itertuples():
+            self._logger.info(f"Processing {area} - {region} > sportshalls")
 
-        # parse HTML
-        soup = self.make_soup(url_sportshalls)
+            # parse HTML
+            soup = self.make_soup(url_sportshalls)
 
-        # get all sportshalls cards
-        cards_all = soup.find_all("div", class_="card lzv2020card")
+            # get all sportshalls cards
+            cards_all = soup.find_all("div", class_="card lzv2020card")
 
-        # extract names of sportshalls
-        sportshalls_names = [
-            self.clean_str(
-                card.find("h5", class_="card-title").get_text(strip=True)
-            ).split(": ")[1]
-            for card in cards_all
-        ]
+            # extract names of sportshalls
+            sportshalls_names = [
+                self.clean_str(
+                    card.find("h5", class_="card-title").get_text(strip=True)
+                ).split(": ")[1]
+                for card in cards_all
+            ]
 
-        # extract and clean info of sportshalls
-        sportshalls_info = [
-            card.find("p", class_="card-text")
-            .get_text(strip=True, separator="\n")
-            .splitlines()
-            for card in cards_all
-        ]
+            # extract and clean info of sportshalls
+            sportshalls_info = [
+                card.find("p", class_="card-text")
+                .get_text(strip=True, separator="\n")
+                .splitlines()
+                + [
+                    self.convert_to_full_url(
+                        card.find("a", class_="btn btn-outline-primary").get("href")
+                    )
+                ]
+                for card in cards_all
+            ]
 
-        for info in sportshalls_info:
-            if len(info) > 3:
-                info.pop(2)  # removes likely second occurrence of phone number
-            if len(info) == 2:
-                if "@" in info[1]:  # if no phone number
-                    info.insert(1, None)  # adds None for phone number
+            for info in sportshalls_info:
+                if len(info) > 4:
+                    info.pop(2)  # removes likely second occurrence of phone number
+                if len(info) == 3:
+                    if "@" in info[1]:  # if no phone number
+                        info.insert(1, None)  # adds None for phone number
+                    else:  # if no email
+                        info.insert(2, None)
 
-        # add together into a DataFrame
-        dict_sportshalls = dict(zip(sportshalls_names, sportshalls_info))
-        df = (
-            pd.DataFrame.from_dict(
-                dict_sportshalls, orient="index", columns=["address", "phone", "email"]
+            # add together into a DataFrame
+            dict_sportshalls = dict(zip(sportshalls_names, sportshalls_info))
+            df = (
+                pd.DataFrame.from_dict(
+                    dict_sportshalls,
+                    orient="index",
+                    columns=["address", "phone", "email", "url_sportshall"],
+                )
+                .reset_index()
+                .rename(columns={"index": "sportshall"})
             )
-            .reset_index()
-            .rename(columns={"index": "sportshall"})
-        )
 
-        # add metadata
-        df = add_columns_to_df(df, {"_region": region, "_area": area})
+            # add metadata
+            df = add_columns_to_df(
+                df, {"area": area, "region": region, "url_region": url_sportshalls}
+            )
 
-        return df
+            list_dfs.append(df)
+
+        df_all = pd.concat(list_dfs, axis=0)
+
+        return df_all
 
     @staticmethod
     def parse_player_stats_history(df_stats, max_workers=10):
@@ -220,34 +254,34 @@ class LZVCupParser(BaseScraper):
 
             # reformat table
             initial_cols = [
-                "Seizoen",
-                "Team",
-                "Wedstrijden",
-                "Goals",
-                "Assists",
-                "Reeks",
-                "Stand",
+                "seizoen",
+                "team",
+                "wedstrijden",
+                "goals",
+                "assists",
+                "reeks",
+                "stand",
             ]
             df.columns = initial_cols
 
             # add name
-            df["Name"] = name
+            df["name"] = name
 
             # reorder columns
-            df = df[["Name"] + initial_cols]
+            df = df[["name"] + initial_cols]
 
             return df
 
         # drop duplicates first as some players may play in multiple teams
-        df_players = df_stats[["Name", "_url"]].drop_duplicates()
+        df_players = df_stats[["name", "url"]].drop_duplicates()
 
         with requests.Session() as session:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 res = executor.map(
                     lambda k: _parse_player_stats_history(
                         session,
-                        df_players["Name"].iloc[k],
-                        df_players["_url"].iloc[k],
+                        df_players["name"].iloc[k],
+                        df_players["url"].iloc[k],
                     ),
                     range(len(df_players)),
                 )
@@ -313,10 +347,10 @@ class LZVCupParser(BaseScraper):
         headers = [
             "date",
             "hour",
-            "team_home",
-            "goals_home",
-            "team_away",
-            "goals_away",
+            "team1",
+            "goals1",
+            "team2",
+            "goals2",
             "sportshall",
         ]
         df = pd.DataFrame(rows_all[:j], columns=headers)
@@ -330,18 +364,18 @@ class LZVCupParser(BaseScraper):
             "ul", class_="item-list striped"
         )
 
-        # parse column header
+        # define column headers
         headers = [
-            "Team",
-            "Gespeeld",
-            "Gewonnen",
-            "Gelijk",
-            "Verloren",
-            "DG",
-            "DT",
-            "DS",
-            "Punten",
-            "Ptn/M",
+            "team",
+            "gespeeld",
+            "gewonnen",
+            "gelijk",
+            "verloren",
+            "dg",  # goals scored
+            "dt",  # goals against
+            "ds",  # goals saldo
+            "punten",
+            "ptn/m",
         ]
         # headers = [
         #     self.clean_str(d.get_text())
@@ -357,10 +391,10 @@ class LZVCupParser(BaseScraper):
         df = pd.DataFrame(rows, columns=headers)
 
         # drop positions in the team names
-        df["Team"] = np.where(
+        df["team"] = np.where(
             df.index <= 8,  # positions 1-9
-            df["Team"].apply(lambda x: x[1:]),
-            df["Team"].apply(lambda x: x[2:]),
+            df["team"].apply(lambda x: x[1:]),
+            df["team"].apply(lambda x: x[2:]),
         )
 
         # convert all but first column to numeric
@@ -375,7 +409,7 @@ class LZVCupParser(BaseScraper):
 
         # parse column header
         headers = [
-            self.clean_str(d.get_text())
+            self.clean_str(d.get_text()).lower()
             for d in table.find("li", class_="item item-list-header").find_all(
                 "div", class_="item-col-header"
             )
@@ -385,21 +419,21 @@ class LZVCupParser(BaseScraper):
         rows_html, rows = self._parse_rows_from_table(table)
 
         # assemble into a DataFrame
-        df = pd.DataFrame(rows, columns=headers).rename(columns={"Teamleden": "Name"})
+        df = pd.DataFrame(rows, columns=headers).rename(columns={"teamleden": "name"})
 
         # get the url for each player
         dict_players = self._parse_players_url_from_rows(rows_html)
         df_players_url = (
-            pd.DataFrame.from_dict(dict_players, orient="index", columns=["_url"])
+            pd.DataFrame.from_dict(dict_players, orient="index", columns=["url"])
             .reset_index()
-            .rename(columns={"index": "Name"})
+            .rename(columns={"index": "name"})
         )
 
         # merge url's with main DataFrame
-        df = pd.merge(df, df_players_url, on="Name", how="left")
+        df = pd.merge(df, df_players_url, on="name", how="left")
 
         # convert certain columns to numeric
-        num_cols = ["Wedstrijden", "Goals", "Assists"]
+        num_cols = ["wedstrijden", "goals", "assists"]
         df[num_cols] = df[num_cols].astype(int)
 
         return df

@@ -49,10 +49,10 @@ class BaseScraper(DataStorage):
             setattr(self, name, value)
 
     def convert_to_full_url(self, url_end):
-        """Joins 'url_end' with self._base_url."""
+        """Joins 'url_end' with self._url_base."""
         if url_end[0] == "/":
             url_end = url_end[1:]
-        url_full = f"{self._base_url}/{url_end}"
+        url_full = f"{self._url_base}/{url_end}"
         return url_full
 
     def make_soup(self, url):

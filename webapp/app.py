@@ -63,8 +63,8 @@ NAVBAR_OPTIONS = [
     "Home",
     "🏆 Find Opponent",
     "👫 Find Team",
+    "😏 Analyse Stats",
     "📣 Get Advice",
-    "😏 Analyse Statistics",
 ]
 page = st.sidebar.selectbox("Navigation", NAVBAR_OPTIONS)
 
@@ -75,7 +75,7 @@ elif page == NAVBAR_OPTIONS[1]:
 elif page == NAVBAR_OPTIONS[2]:
     make_page_join_team()
 elif page == NAVBAR_OPTIONS[3]:
-    make_page_coachbot()
-elif page == NAVBAR_OPTIONS[4]:
     df_stats_agg = pre_aggregate_stats(df_players, df_stats_historical)
     make_page_vanity_stats(df_players, df_stats_agg)
+elif page == NAVBAR_OPTIONS[4]:
+    make_page_coachbot()
