@@ -13,13 +13,13 @@ class LZVCupParser(BaseScraper):
     def __init__(self, config, **kwargs) -> None:
         """
         The config dictionary should include 'url_base', 'area', and 'url_area'.
-        Keys from the config will be stored with a _ prefix as attributes of the class.
+        Keys from the config are stored with a _ prefix as attributes of the class.
         Additional keyword arguments won't have such prefix, except for the optional
-        logger= argument, which will be stored as self._logger.
+        logger= argument, which is stored as self._logger.
         """
         super().__init__(config, **kwargs)
 
-        # complete area url
+        # complete area URL
         if "_url_area" in dir(self):
             self._url_area = self.convert_to_full_url(self._url_area)
 
@@ -49,7 +49,7 @@ class LZVCupParser(BaseScraper):
         dict_regions = dict(zip(region_names, region_cards))
 
         # get the names of the competition (e.g. 2e Klasse)
-        # or the sporthalls locations together with the respective page url
+        # or the sporthalls locations together with the respective page URL
         rows_sportshalls, rows_competitions = [], []
         for region, region_card in dict_regions.items():
             card_elements = region_card.find_all("a", class_="btn btn-outline-primary")
@@ -75,10 +75,12 @@ class LZVCupParser(BaseScraper):
 
     def parse_competitions_and_teams(self, df_competitions_urls):
         """
-        Parses following information from a competitions page:
-        - Teams and their respective urls
+        Parses following information from all competitions pages and regions:
+        - Teams and their respective URLs
         - Schedule with results
         - Current standings
+
+        Parses following information from each team page in a competition:
         - Player statistics
         - Team palmares
 
@@ -96,7 +98,7 @@ class LZVCupParser(BaseScraper):
         )
         for (
             _,
-            _,
+            _,  # area
             region,
             competition,
             url_competition,
@@ -108,10 +110,11 @@ class LZVCupParser(BaseScraper):
 
             # get teams for given competition
             dict_teams = self._parse_urls_teams(soup_competition)
+
             df_teams = (
-                pd.DataFrame.from_dict(dict_teams, orient="index", columns=["URL"])
+                pd.DataFrame.from_dict(dict_teams, orient="index", columns=["url"])
                 .reset_index()
-                .rename(columns={"index": "TEAM"})
+                .rename(columns={"index": "team"})
             )
             df_teams = add_columns_to_df(
                 df_teams, {"area": area, "region": region, "competition": competition}
@@ -123,7 +126,7 @@ class LZVCupParser(BaseScraper):
             # gather metadata into a dict
             metadata = {"area": area, "region": region, "competition": competition}
 
-            # retrieve schedule with results
+            # retrieve schedule including results and future games
             df_schedule = self._parse_competition_schedule(soup_competition)
             df_schedule = add_columns_to_df(df_schedule, metadata)
             list_schedules.append(df_schedule)
@@ -151,7 +154,7 @@ class LZVCupParser(BaseScraper):
                         "No player info available", team=team, url=url_team
                     )
 
-                # get historical team standings
+                # get historical team standings (= palmares)
                 try:
                     df_palmares_team = self._parse_team_palmares(soup_team)
                     df_palmares_team = add_columns_to_df(df_palmares_team, metadata)
@@ -162,7 +165,8 @@ class LZVCupParser(BaseScraper):
                     )
                     continue
 
-        df_teams = pd.concat(list_teams, axis=0).reset_index(drop=True)
+        # assemble all output into DataFrames
+        df_teams = pd.concat(list_teams).reset_index(drop=True)
         df_schedules = pd.concat(list_schedules).reset_index(drop=True)
         df_standings = pd.concat(list_standings).reset_index(drop=True)
         df_stats = pd.concat(list_stats).reset_index(drop=True)
@@ -195,7 +199,7 @@ class LZVCupParser(BaseScraper):
                 for card in cards_all
             ]
 
-            # extract and clean info of sportshalls
+            # extract info about sportshalls
             sportshalls_info = [
                 card.find("p", class_="card-text")
                 .get_text(strip=True, separator="\n")
@@ -208,6 +212,7 @@ class LZVCupParser(BaseScraper):
                 for card in cards_all
             ]
 
+            # clean sportshalls info
             for info in sportshalls_info:
                 if len(info) > 4:
                     info.pop(2)  # removes likely second occurrence of phone number
@@ -215,7 +220,7 @@ class LZVCupParser(BaseScraper):
                     if "@" in info[1]:  # if no phone number
                         info.insert(1, None)  # adds None for phone number
                     else:  # if no email
-                        info.insert(2, None)
+                        info.insert(2, None)  # adds None for email
 
             # add together into a DataFrame
             dict_sportshalls = dict(zip(sportshalls_names, sportshalls_info))
@@ -236,7 +241,7 @@ class LZVCupParser(BaseScraper):
 
             list_dfs.append(df)
 
-        df_all = pd.concat(list_dfs, axis=0)
+        df_all = pd.concat(list_dfs)
 
         return df_all
 
@@ -275,6 +280,7 @@ class LZVCupParser(BaseScraper):
         # drop duplicates first as some players may play in multiple teams
         df_players = df_stats[["name", "url"]].drop_duplicates()
 
+        # parse historical statistics for each player in parallel
         with requests.Session() as session:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 res = executor.map(
@@ -295,7 +301,7 @@ class LZVCupParser(BaseScraper):
     ############################
 
     def _parse_urls_teams(self, soup):
-        """Parses the urls for each team as {team_name: url, ...}."""
+        """Parses the URLs for each team as {team_name: URL, ...}."""
         tags_teams = [
             s.find("a") for s in soup.find_all("div", class_="col-10 text-nowrap")
         ]
@@ -373,7 +379,7 @@ class LZVCupParser(BaseScraper):
             "verloren",
             "dg",  # goals scored
             "dt",  # goals against
-            "ds",  # goals saldo
+            "ds",  # goal difference
             "punten",
             "ptn/m",
         ]
@@ -421,7 +427,7 @@ class LZVCupParser(BaseScraper):
         # assemble into a DataFrame
         df = pd.DataFrame(rows, columns=headers).rename(columns={"teamleden": "name"})
 
-        # get the url for each player
+        # get the URL for each player
         dict_players = self._parse_players_url_from_rows(rows_html)
         df_players_url = (
             pd.DataFrame.from_dict(dict_players, orient="index", columns=["url"])
@@ -429,7 +435,7 @@ class LZVCupParser(BaseScraper):
             .rename(columns={"index": "name"})
         )
 
-        # merge url's with main DataFrame
+        # merge URLs with main DataFrame
         df = pd.merge(df, df_players_url, on="name", how="left")
 
         # convert certain columns to numeric
@@ -439,12 +445,12 @@ class LZVCupParser(BaseScraper):
         return df
 
     def _parse_team_palmares(self, soup):
-        """Parses previous team competition standings (= palmares)."""
+        """Parses previous team competition standings (aka palmares)."""
         # grab the raw HTML table with the historical standings
         table = soup.find("table", {"class": "lzvtable"})
 
         # compose the header
-        header = [th.get_text() for th in table.find("thead").find_all("th")][
+        header = [th.get_text().lower() for th in table.find("thead").find_all("th")][
             :-1
         ]  # drops orphan column
 
@@ -463,13 +469,13 @@ class LZVCupParser(BaseScraper):
 
         # stitch together into a DataFrame
         df = pd.DataFrame(rows, columns=header)
-        df["Seizoen"] = df["Seizoen"].apply(lambda x: x[:9])  # 20xx-20xx
-        df["Positie"] = df["Positie"].astype(int)
+        df["seizoen"] = df["seizoen"].apply(lambda x: x[:9])  # 20xx-20xx
+        df["positie"] = df["positie"].astype(int)
 
         return df
 
     def _parse_players_url_from_rows(self, rows_html):
-        """Parses the player urls for given team as {player_name: url, ...}."""
+        """Parses the player URLs for given team as {player_name: URL, ...}."""
         dict_players = {}
         for player in rows_html:
             player_info = player[1]
@@ -483,6 +489,7 @@ class LZVCupParser(BaseScraper):
         return dict_players
 
     def _parse_rows_from_table(self, table, drop_header=1):
+        """Parses rows from a table-like HTML structure."""
         # grab rows
         rows_html = [
             li.find_all("div", attrs={"class": lambda x: x.startswith("item-col col-")})

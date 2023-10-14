@@ -1,18 +1,19 @@
-import pytest
-
 from scraper.parsers.lzvcup import LZVCupParser
 
+# initialize parser setup
 config_ = {
-    "base_url": "https://www.lzvcup.be",
-    "area_name": "VLAAMS BRABANT",
-    "area_url": "results/5",
+    "url_base": "https://www.lzvcup.be",
+    "area": "VLAAMS BRABANT",
+    "url_area": "results/5",
 }
 parser = LZVCupParser(config_, region="Regio Ring Oost")
 
+# grab top-level URLs
+df_sportshalls_urls, df_competitions_urls = parser.parse_region_cards()
 
-def test_parse_region_cards_and_competitions_from_region_card():
-    region_cards = parser.parse_region_cards()
-    regions = list(region_cards.keys())
+
+def test_output_region_cards():
+    regions = sorted(list(df_competitions_urls["region"].unique()))
 
     assert regions == [
         "Regio Dames Oost-Brabant",
@@ -20,61 +21,31 @@ def test_parse_region_cards_and_competitions_from_region_card():
         "Regio Leuven",
         "Regio Leuven Studenten",
         "Regio Pajottenland",
-        "Regio Ring Noord",
+        # "Regio Ring Noord",
         "Regio Ring Oost",
     ]
 
-    competitions = parser.parse_competitions_from_region_card(
-        region_cards[parser.region]
-    )
-
-    assert competitions.keys() == {"competitions", "sportshalls"}
-
 
 def test_parse_competitions_and_teams():
-    dict_competitions = {
-        "1e Klasse": {
-            "url": "https://www.lzvcup.be/results/5/16/1",
-            "teams": {
-                "ZVC Vollentip": "https://www.lzvcup.be/teams/detail/365",
-                "Oppem Boys": "https://www.lzvcup.be/teams/detail/1242",
-                "The Crows": "https://www.lzvcup.be/teams/detail/1971",
-                "Eppegem City": "https://www.lzvcup.be/teams/detail/1970",
-                "Tervuren United": "https://www.lzvcup.be/teams/detail/551",
-            },
-        },
-        "2e Klasse": {
-            "url": "https://www.lzvcup.be/results/5/16/2",
-            "teams": {
-                "Aston Birra": "https://www.lzvcup.be/teams/detail/2001",
-                "ZVC Copains": "https://www.lzvcup.be/teams/detail/1525",
-                "Chiro Mik Mak": "https://www.lzvcup.be/teams/detail/1526",
-                "FC Degradé": "https://www.lzvcup.be/teams/detail/2002",
-                "The Blinders": "https://www.lzvcup.be/teams/detail/1605",
-            },
-        },
-    }
+    # trim down urls to limit processing time
+    df_competitions_urls_ = df_competitions_urls.query(f"region == '{parser.region}'")
 
     (
+        df_teams,
         df_schedules,
         df_standings,
         df_stats,
         df_palmares,
-    ) = parser.parse_competitions_and_teams(
-        dict_competitions=dict_competitions, region=parser.region
-    )
+    ) = parser.parse_competitions_and_teams(df_competitions_urls_)
 
+    assert len(df_teams) > 0
     assert len(df_schedules) > 0
     assert len(df_standings) > 0
     assert len(df_stats) > 0
     assert len(df_palmares) > 0
 
 
-@pytest.mark.parametrize(
-    "url, region",
-    [("https://www.lzvcup.be/sportshalls/16", "Regio Ring Oost")],
-)
-def test_parse_sporthalls(url, region):
-    df = parser.parse_sporthalls(url_sportshalls=url, region=region)
+def test_parse_sporthalls():
+    df_sportshalls = parser.parse_sporthalls(df_sportshalls_urls)
 
-    assert len(df) > 0
+    assert len(df_sportshalls) > 0

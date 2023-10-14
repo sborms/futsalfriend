@@ -50,11 +50,11 @@ def scrape(config, log_main):
         # initialize parser instance
         parser = LZVCupParser(config_, logger=log)
 
-        # get all regions within area
+        # get urls for competitions and sportshalls for all regions within area
         df_sportshalls_urls, df_competitions_urls = parser.parse_region_cards()
         list_competitions.append(df_competitions_urls)
 
-        # get competition teams, schedule & standings, and team player statistics & palmares
+        # get competition teams, schedule & standings, and team player stats & palmares
         # note: some competitions appear duplicated across regions,
         # for instance 4E KLASSE C GENT <> 1E KLASSE DENDERSTREEK
         (
@@ -77,13 +77,13 @@ def scrape(config, log_main):
         log_main.info(f"Area {area} successfully processed")
 
     # gather lists into single DataFrames
-    df_competitions_urls_all = pd.concat(list_competitions, axis=0)
-    df_teams_all = pd.concat(list_teams, axis=0)
-    df_schedules_all = pd.concat(list_schedules, axis=0)
-    df_standings_all = pd.concat(list_standings, axis=0)
-    df_stats_players_all = pd.concat(list_stats, axis=0)
-    df_palmares_all = pd.concat(list_palmares, axis=0)
-    df_sportshalls_all = pd.concat(list_sportshalls, axis=0)
+    df_competitions_urls_all = pd.concat(list_competitions)
+    df_teams_all = pd.concat(list_teams)
+    df_schedules_all = pd.concat(list_schedules)
+    df_standings_all = pd.concat(list_standings)
+    df_stats_players_all = pd.concat(list_stats)
+    df_palmares_all = pd.concat(list_palmares)
+    df_sportshalls_all = pd.concat(list_sportshalls)
 
     # get historical player statistics if enabled in config
     if config["steps"]["historical_players"] is True:
@@ -111,13 +111,14 @@ def process_data(config, dict_out):
         dict_out.update({data_name: data})  # overwrite modified DataFrame
 
     # create a new DataFrame with the sportshall(s) each team plays in
+    # note: some teams have multiple sportshalls
     df_locations = (
         dict_out["schedules"][["team1", "sportshall"]]
-        .drop_duplicates()
         .rename(columns={"team1": "team"})
         .sort_values("team")
         .reset_index(drop=True)
-    )  # note: some teams have multiple sportshalls
+        .drop_duplicates()
+    )
     dict_out.update({"locations": df_locations})
 
     return dict_out
@@ -126,7 +127,7 @@ def process_data(config, dict_out):
 def store(config, dict_tables):
     root = config["dir_output"]
     for data_name, data in dict_tables.items():
-        output_dir = f"{root}/{data_name}.csv"
+        output_dir = f"{root}/{data_name}.csv"  # files get overwritten at every rerun
         if data is not None:
             DataStorage.store_csv(data, dir=output_dir, index=False)
 
@@ -135,9 +136,8 @@ if __name__ == "__main__":
     if not os.path.isdir(DIR_LOGS):
         os.makedirs(DIR_LOGS)
 
-    log = Logger.get_logger(
-        log_name="scraper", log_file=f"{DIR_LOGS}/_main.log"
-    )  # logger for main steps
+    # initialize logger for main steps
+    log = Logger.get_logger(log_name="scraper", log_file=f"{DIR_LOGS}/_main.log")
 
     log.info(f"Running script from {DIR_SCRIPT}")
 
