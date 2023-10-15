@@ -332,25 +332,27 @@ class LZVCupParser(BaseScraper):
         for j, row in enumerate(rows_all):
             if row[0] == "Nog te plannen":
                 break
-            # refactor match time info into two elements (date, hour)
-            dayhour = row.pop(0)[-11:].split(" ")  # [dd/mm, HHuMM]
-            row.insert(0, dayhour[1])
-            row.insert(0, dayhour[0])
+            # refactor match time info into day, date, and hour
+            time = row.pop(0)
+            row.insert(0, time[14:19].replace("u", ""))  # hour
+            row.insert(0, time[3:13])  # date
+            row.insert(0, time[:2])  # day
 
             # refactor score into two elements (home goals, out goals)
-            score = row[3]
+            score = row[4]
             if score in ["In behandeling", "-"]:  # match hasn't been played yet
-                row[3] = np.nan
-                row.insert(5, np.nan)
+                row[4] = np.nan
+                row.insert(6, np.nan)
             else:
-                row[3] = int(score[0])
-                row.insert(5, int(score[-1]))  # put after away team
+                row[4] = int(score[0])
+                row.insert(6, int(score[-1]))  # put after away team
 
             # drop last element which is empty
             row.pop(-1)
 
         # assemble into a DataFrame
         headers = [
+            "day",
             "date",
             "hour",
             "team1",
@@ -360,6 +362,9 @@ class LZVCupParser(BaseScraper):
             "sportshall",
         ]
         df = pd.DataFrame(rows_all[:j], columns=headers)
+
+        # convert date to datetime
+        df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y")
 
         return df
 
@@ -381,7 +386,7 @@ class LZVCupParser(BaseScraper):
             "dt",  # goals against
             "ds",  # goal difference
             "punten",
-            "ptn/m",
+            "ptnm",  # points per match
         ]
         # headers = [
         #     self.clean_str(d.get_text())
@@ -425,7 +430,9 @@ class LZVCupParser(BaseScraper):
         rows_html, rows = self._parse_rows_from_table(table)
 
         # assemble into a DataFrame
-        df = pd.DataFrame(rows, columns=headers).rename(columns={"teamleden": "name"})
+        df = pd.DataFrame(rows, columns=headers).rename(
+            columns={"teamleden": "name", "#": "number"}
+        )
 
         # get the URL for each player
         dict_players = self._parse_players_url_from_rows(rows_html)
@@ -441,6 +448,9 @@ class LZVCupParser(BaseScraper):
         # convert certain columns to numeric
         num_cols = ["wedstrijden", "goals", "assists"]
         df[num_cols] = df[num_cols].astype(int)
+
+        # drop fairplay column
+        df = df.drop(columns="fairplay")
 
         return df
 

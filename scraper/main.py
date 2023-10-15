@@ -6,6 +6,7 @@ import pandas as pd
 DIR_SCRIPT = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(DIR_SCRIPT))  # so we can keep main.py in scraper/
 
+from scraper.db.update import refresh_database
 from scraper.parsers.lzvcup import LZVCupParser
 from scraper.utils.base import DataStorage
 from scraper.utils.logger import Logger
@@ -104,32 +105,37 @@ def scrape(config, log_main):
     }
 
 
-def process_data(config, dict_out):
+def process_data(config, dict_tables):
     for data_name, cols in config["postprocessing"].items():
-        data = dict_out[data_name]
+        data = dict_tables[data_name]
         data = postproces_df(data, first_cols=cols[0], drop_cols=cols[1])
-        dict_out.update({data_name: data})  # overwrite modified DataFrame
+        dict_tables.update({data_name: data})  # overwrite modified DataFrame
 
     # create a new DataFrame with the sportshall(s) each team plays in
     # note: some teams have multiple sportshalls
     df_locations = (
-        dict_out["schedules"][["team1", "sportshall"]]
+        dict_tables["schedules"][["team1", "sportshall"]]
         .rename(columns={"team1": "team"})
         .sort_values("team")
         .reset_index(drop=True)
         .drop_duplicates()
     )
-    dict_out.update({"locations": df_locations})
+    dict_tables.update({"locations": df_locations})
 
-    return dict_out
+    return dict_tables
 
 
-def store(config, dict_tables):
-    root = config["dir_output"]
-    for data_name, data in dict_tables.items():
-        output_dir = f"{root}/{data_name}.csv"  # files get overwritten at every rerun
-        if data is not None:
-            DataStorage.store_csv(data, dir=output_dir, index=False)
+def store(config, dict_tables, log_main, csv=True):
+    # refresh SQLite database
+    refresh_database(dict_tables, path2db=config["database"], logger=log_main)
+
+    if csv:
+        # store all tables also as csv files
+        root = config["dir_output"]
+        for data_name, data in dict_tables.items():
+            output_dir = f"{root}/{data_name}.csv"  # overwrites files at every rerun
+            if data is not None:
+                DataStorage.store_csv(data, dir=output_dir, index=False)
 
 
 if __name__ == "__main__":
@@ -144,11 +150,11 @@ if __name__ == "__main__":
     config = DataStorage.load_json(f"{DIR_SCRIPT}/config/config.json")
     log.info("Config loaded")
 
-    dict_out = scrape(config, log_main=log)
+    dict_tables = scrape(config, log_main=log)
     log.info("Data scraped")
 
-    dict_out = process_data(config, dict_out)
+    dict_tables = process_data(config, dict_tables)
     log.info("Data processed into tables")
 
-    store(config, dict_out)
+    store(config, dict_tables, log_main=log)
     log.info("Data stored")

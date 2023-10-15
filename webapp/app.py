@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 from ui.coach import make_page_coachbot
 from ui.friendly import make_page_find_friendly
@@ -18,39 +17,52 @@ st.set_page_config(
 #### startup ####
 #################
 
-
-@st.cache_data
-def load_stats(path, **kwargs):
-    return pd.read_csv(path, **kwargs)
+CONN = st.experimental_connection("futsalfriend_db", type="sql")
 
 
 @st.cache_data
-def pre_aggregate_stats(df_p, df_h):
-    # merge players and metadata (_p) with historical (_h) stats
-    df_agg = df_p.merge(
-        df_h.drop(columns=["Reeks", "Stand"]),
-        on=["Name", "Team"],
-    )
+def query_players():
+    q = """
+        select distinct
+            t.area as area,
+            t.region as region,
+            t.competition as competition,
+            c.team as team,
+            c.name as name
+        from
+        -- deduplicate because some players appear twice due to errors in source data
+        (select distinct name, team from stats_players) as c
+        join teams t on c.team = t.team
+        order by t.area, t.region, t.competition, c.team
+    """
 
-    # overwrite statistics but now grouped by player and team
-    # old teams from a player's history are ignored
-    num_cols = ["Wedstrijden", "Goals", "Assists"]
-    df_agg[num_cols] = df_agg.groupby(["Name", "Team"])[num_cols].transform("sum")
+    df = CONN.query(q)
 
-    # add an overall efficiency statistic
-    df_agg["(G+A)/W"] = (df_agg["Goals"] + df_agg["Assists"]) / df_agg["Wedstrijden"]
-
-    # remove single-season information
-    df_agg = df_agg.drop(columns=["Seizoen"])
-    df_agg = df_agg.drop_duplicates()
-
-    return df_agg
+    return df
 
 
-df_players = load_stats(
-    "data/stats.csv", usecols=["Name", "Team", "_competition", "_region", "_area"]
-).drop_duplicates()  # some players appear twice due to errors in the source data
-df_stats_historical = load_stats("data/stats_historical_players.csv")
+@st.cache_data
+def query_stats_agg():
+    q = """
+        select distinct
+            c.name as name,
+            c.team as team,
+            sum(h.wedstrijden) as wedstrijden,
+            sum(h.goals) as goals,
+            sum(h.assists) as assists,
+            (sum(h.goals * 1.0) + sum(h.assists)) / sum(h.wedstrijden) as '(G+A)/W'
+        from
+        (select distinct name, team from stats_players) as c
+        join stats_players_historical h on c.name = h.name and c.team = h.team
+        group by c.name, c.team
+    """
+
+    df = CONN.query(q)
+
+    return df
+
+
+df_players = query_players()
 
 #################
 ###### app ######
@@ -75,7 +87,7 @@ elif page == NAVBAR_OPTIONS[1]:
 elif page == NAVBAR_OPTIONS[2]:
     make_page_join_team()
 elif page == NAVBAR_OPTIONS[3]:
-    df_stats_agg = pre_aggregate_stats(df_players, df_stats_historical)
+    df_stats_agg = query_stats_agg()
     make_page_vanity_stats(df_players, df_stats_agg)
 elif page == NAVBAR_OPTIONS[4]:
     make_page_coachbot()

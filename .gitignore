@@ -3,6 +3,7 @@
 .streamlit/
 data/
 logs/
+zzz.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

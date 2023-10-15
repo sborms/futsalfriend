@@ -3,11 +3,11 @@ import streamlit as st
 
 
 def filter_stats(df_stats_agg, df_filt, min_w):
-    df_stats = df_stats_agg.query(f"Wedstrijden >= {min_w}").merge(
+    df_stats = df_stats_agg.query(f"wedstrijden >= {min_w}").merge(
         df_filt,
-        on=["Name", "Team"],
+        on=["name", "team"],
         how="inner",
-    )[["Name", "Team", "Wedstrijden", "Goals", "Assists", "(G+A)/W"]]
+    )[["name", "team", "wedstrijden", "goals", "assists", "(G+A)/W"]]
 
     return df_stats
 
@@ -34,35 +34,35 @@ def make_page_vanity_stats(df_players, df_stats_agg):
 
     with row1col1:
         dict_filters.update(
-            {"_area": st.multiselect("Areas", df_players["_area"].unique())}
+            {"area": st.multiselect("Areas", df_players["area"].unique())}
         )
         df_players = filter_players(df_players, dict_filters)
     with row1col2:
         dict_filters.update(
-            {"_region": st.multiselect("Regions", df_players["_region"].unique())}
+            {"region": st.multiselect("Regions", df_players["region"].unique())}
         )
         df_players = filter_players(df_players, dict_filters)
     with row1col3:
         dict_filters.update(
             {
-                "_competition": st.multiselect(
-                    "Competitions", df_players["_competition"].unique()
+                "competition": st.multiselect(
+                    "Competitions", df_players["competition"].unique()
                 )
             }
         )
         df_players = filter_players(df_players, dict_filters)
     with row2col1:
         dict_filters.update(
-            {"Team": st.multiselect("Teams", df_players["Team"].unique())}
+            {"team": st.multiselect("Teams", df_players["team"].unique())}
         )
         df_players = filter_players(df_players, dict_filters)
     with row2col2:
         dict_filters.update(
-            {"Name": st.multiselect("Players", df_players["Name"].unique())}
+            {"name": st.multiselect("Players", df_players["name"].unique())}
         )
         df_players = filter_players(df_players, dict_filters)
 
-    df_players = df_players.drop(columns=["_area", "_region", "_competition"])
+    df_players = df_players.drop(columns=["area", "region", "competition"])
 
     st.markdown("#### All-time statistics")
 
@@ -88,14 +88,14 @@ def make_page_vanity_stats(df_players, df_stats_agg):
         if fig_type == "Bar":
             fig = px.bar(
                 df_sel,
-                x="Name",
+                x="name",
                 y=stat_col,
-                color="Team",
-                category_orders={"Name": df_sel["Name"]},
+                color="team",
+                category_orders={"name": df_sel["name"]},
             )
         elif fig_type == "Scatter":
             fig = px.scatter(
-                df_sel, x="Wedstrijden", y=stat_col, color="Team", hover_data=["Name"]
+                df_sel, x="wedstrijden", y=stat_col, color="team", hover_data=["name"]
             )
             fig.update_traces(marker_size=10)
 

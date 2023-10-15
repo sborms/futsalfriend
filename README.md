@@ -22,16 +22,16 @@ The data comes from the [lzvcup.be](https://www.lzvcup.be/) website. Scraping it
     - The competition's _standings_;
     - The _teams_ and their page URL.
 - **Step 4** - For each of the team's page URL, grab following information:
-    - The players and their _current season's statistics_ (such as games played or goals scored, and also every player's page URL);
+    - The players and their _current season's statistics_ (such as goals scored, and also every player's page URL);
     - The _palmares_ of the team (i.e. the competition positions they achieved in the past).
 - **Step 5** - Go to each region-specific sportshall's page URL and parse all _individual sportshalls_ together with metadata like address and email address. 
 - **Step 6** - Go to each of the player's page URL and grab their _historical statistics_.
 - **Step 7** - Transform all the scraped data into a few tables with relevant metadata (for instance, area and region).
-- **Step 8** - Store the tables in a database (SQLite or on the cloud).
+- **Step 8** - Store the tables in a database (in this case SQLite or alternatively on the cloud).
 
 All relevant code is in the `scraper/` folder. You can call `make scrape` to run the full scraping script `main.py`. It takes around 15-20 minutes.
 
-The main scraping script also includes some nice logging. See below! For more information about the logging setup, this [Medium post](https://medium.com/@sborms/while-my-python-script-gently-logs-2a3491338ecd) helps.
+The main scraping script includes some nice logging. See below! For more information about the logging setup, this [Medium post](https://medium.com/@sborms/while-my-python-script-gently-logs-2a3491338ecd) helps.
 
 <p align="center"> <img src="assets/showofflogs.png" alt="logs"/> </p>
 
