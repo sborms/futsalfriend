@@ -6,6 +6,6 @@ def make_page_coachbot():
 
     st.markdown("**Under construction**")
 
-    user_input = st.text_input("Ask your question here")
+    user_input = st.text_input("Ask your question...")
     if user_input:
         st.write("Offense is the best defense!")

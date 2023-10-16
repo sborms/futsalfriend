@@ -22,5 +22,5 @@
         "standings": [["area", "region", "competition", "team"], []],
         "palmares": [["team", "seizoen", "reeks", "positie"], ["area", "region", "competition"]]
     },
-    "database": "database/futsalfriend.db"
+    "database": "webapp/futsalfriend.db"
 }

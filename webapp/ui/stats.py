@@ -3,11 +3,11 @@ import streamlit as st
 
 
 def filter_stats(df_stats_agg, df_filt, min_w):
-    df_stats = df_stats_agg.query(f"wedstrijden >= {min_w}").merge(
+    df_stats = df_stats_agg.query(f"Games >= {min_w}").merge(
         df_filt,
-        on=["name", "team"],
+        on=["Name", "Team"],
         how="inner",
-    )[["name", "team", "wedstrijden", "goals", "assists", "(G+A)/W"]]
+    )[["Name", "Team", "Games", "Goals", "Assists", "(G+A)/W"]]
 
     return df_stats
 
@@ -26,57 +26,53 @@ def make_page_vanity_stats(df_players, df_stats_agg):
     st.markdown("#### Filters")
     st.markdown("Leave a filter blank to select all available options.")
 
+    # iteratively propose and adjust filters
     dict_filters = {}
 
-    # iteratively propose and adjust filters
-    row1col1, row1col2, row1col3 = st.columns(3)
-    row2col1, row2col2 = st.columns(2)
-
-    with row1col1:
+    col11, col12, col13 = st.columns(3)
+    with col11:
         dict_filters.update(
-            {"area": st.multiselect("Areas", df_players["area"].unique())}
+            {"Area": st.multiselect("Areas", df_players["Area"].unique())}
         )
         df_players = filter_players(df_players, dict_filters)
-    with row1col2:
+    with col12:
         dict_filters.update(
-            {"region": st.multiselect("Regions", df_players["region"].unique())}
+            {"Region": st.multiselect("Regions", df_players["Region"].unique())}
         )
         df_players = filter_players(df_players, dict_filters)
-    with row1col3:
+    with col13:
         dict_filters.update(
             {
-                "competition": st.multiselect(
-                    "Competitions", df_players["competition"].unique()
+                "Competition": st.multiselect(
+                    "Competitions", df_players["Competition"].unique()
                 )
             }
         )
         df_players = filter_players(df_players, dict_filters)
-    with row2col1:
+
+    col21, col22 = st.columns(2)
+    with col21:
         dict_filters.update(
-            {"team": st.multiselect("Teams", df_players["team"].unique())}
+            {"Team": st.multiselect("Teams", df_players["Team"].unique())}
         )
         df_players = filter_players(df_players, dict_filters)
-    with row2col2:
+    with col22:
         dict_filters.update(
-            {"name": st.multiselect("Players", df_players["name"].unique())}
+            {"Name": st.multiselect("Players", df_players["Name"].unique())}
         )
         df_players = filter_players(df_players, dict_filters)
 
-    df_players = df_players.drop(columns=["area", "region", "competition"])
+    df_players = df_players.drop(columns=["Area", "Region", "Competition"])
 
     st.markdown("#### All-time statistics")
 
     # get desired metric, minimum number of games played and plot type
     col1, col2, col3 = st.columns(3)
-    with col1:
-        stat_col = st.selectbox(
-            "Statistic", ["Wedstrijden", "Goals", "Assists", "(G+A)/W"], index=1
-        )
-    with col2:
-        min_w = st.number_input("Minimum games played", min_value=1, value=5, step=1)
-    with col3:
-        # define figtype to be "bar" or "scatter"
-        fig_type = st.selectbox("Plot type", ["Bar", "Scatter"])
+    stat_col = col1.selectbox(
+        "Statistic", ["Games", "Goals", "Assists", "(G+A)/W"], index=1
+    )
+    min_w = col2.number_input("Minimum games played", min_value=1, value=5, step=1)
+    fig_type = col3.selectbox("Plot type", ["Bar", "Scatter"])
 
     # filter stats
     df_sel = filter_stats(df_stats_agg, df_players, min_w)
@@ -88,14 +84,14 @@ def make_page_vanity_stats(df_players, df_stats_agg):
         if fig_type == "Bar":
             fig = px.bar(
                 df_sel,
-                x="name",
+                x="Name",
                 y=stat_col,
-                color="team",
-                category_orders={"name": df_sel["name"]},
+                color="Team",
+                category_orders={"Name": df_sel["Name"]},
             )
         elif fig_type == "Scatter":
             fig = px.scatter(
-                df_sel, x="wedstrijden", y=stat_col, color="team", hover_data=["name"]
+                df_sel, x="Games", y=stat_col, color="Team", hover_data=["Name"]
             )
             fig.update_traces(marker_size=10)
 

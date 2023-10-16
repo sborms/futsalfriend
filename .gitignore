@@ -3,7 +3,7 @@
 .streamlit/
 data/
 logs/
-zzz.ipynb
+spielerei/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

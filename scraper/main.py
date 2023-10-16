@@ -10,7 +10,7 @@ from scraper.db.update import refresh_database
 from scraper.parsers.lzvcup import LZVCupParser
 from scraper.utils.base import DataStorage
 from scraper.utils.logger import Logger
-from scraper.utils.utils import postproces_df, ymd
+from scraper.utils.utils import add_coordinates, postproces_df, ymd
 
 DIR_LOGS = f"{DIR_SCRIPT}/logs/{ymd()}/"  # subdivide logs by day of script execution
 
@@ -108,6 +108,9 @@ def scrape(config, log_main):
 def process_data(config, dict_tables):
     for data_name, cols in config["postprocessing"].items():
         data = dict_tables[data_name]
+        if data_name == "sportshalls":
+            # add coordinates to sportshalls
+            data = add_coordinates(data, dir_coordinates="data/_coordinates.csv")
         data = postproces_df(data, first_cols=cols[0], drop_cols=cols[1])
         dict_tables.update({data_name: data})  # overwrite modified DataFrame
 

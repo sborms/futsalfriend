@@ -27,9 +27,11 @@ The data comes from the [lzvcup.be](https://www.lzvcup.be/) website. Scraping it
 - **Step 5** - Go to each region-specific sportshall's page URL and parse all _individual sportshalls_ together with metadata like address and email address. 
 - **Step 6** - Go to each of the player's page URL and grab their _historical statistics_.
 - **Step 7** - Transform all the scraped data into a few tables with relevant metadata (for instance, area and region).
-- **Step 8** - Store the tables in a database (in this case SQLite or alternatively on the cloud).
+- **Step 8** - Store the tables in a database (in this case SQLite but alternatively on the cloud).
 
-All relevant code is in the `scraper/` folder. You can call `make scrape` to run the full scraping script `main.py`. It takes around 15-20 minutes.
+All relevant code is in the `scraper/` folder. You can call `make scrape` to run the full scraping script `main.py`. It takes around 15-20 minutes, plus another 10-15 minutes if the geographic coordinates for the sportshalls need to be processed afresh.
+
+The resulting database is not fully relational. It can be seen as a **(very) lightweight data warehouse**, set up in such a way that later aggregations in the web application can be done more efficiently.
 
 The main scraping script includes some nice logging. See below! For more information about the logging setup, this [Medium post](https://medium.com/@sborms/while-my-python-script-gently-logs-2a3491338ecd) helps.
 
@@ -40,4 +42,5 @@ The main scraping script includes some nice logging. See below! For more informa
 ![Python](https://img.shields.io/badge/python-%2314354C.svg?style=for-the-badge&logo=python&logoColor=white)
 ![BeautifulSoup](https://img.shields.io/badge/BeautifulSoup-%2314354C.svg?style=for-the-badge&logo=BeautifulSoup)
 ![Streamlit](https://img.shields.io/badge/Streamlit-%2314354C.svg?style=for-the-badge&logo=Streamlit&logoColor=red)
+![SQLite](https://img.shields.io/badge/SQLite-%2314354C.svg?style=for-the-badge&logo=SQLite&logoColor=blue)
 <!-- ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) -->

@@ -29,6 +29,7 @@ structlog = "^23.1.0"
 matplotlib = "^3.8.0"
 plotly = "^5.17.0"
 sqlalchemy = "^2.0.22"
+geopy = "^2.4.0"
 
 [tool.black]
 line-length = 88

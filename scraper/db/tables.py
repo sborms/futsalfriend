@@ -60,6 +60,8 @@ class Sportshalls(Base):
     phone = Column(String)
     email = Column(String)
     url_region = Column(String)
+    latitude = Column(Float)
+    longitude = Column(Float)
 
 
 class Standings(Base):
