@@ -59,7 +59,7 @@ def filter_teams(df, city, address, km):
 
 def style_table(df, drop_cols=[]):
     """Styles DataFrame for pretty display in Streamlit."""
-    # convert float to int columns
+    # convert all float columns to int
     cols_float = df.select_dtypes(include=["float"]).columns
     df[cols_float] = df[cols_float].astype(int)
 

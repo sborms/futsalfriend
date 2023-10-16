@@ -31,7 +31,7 @@ def query_players():
             c.name as Name
         from
         -- deduplicate because some players appear twice due to errors in source data
-        (select distinct name, team from stats_players) as c
+        (select distinct name, team from stats_players) c
         join teams t on c.team = t.team
         order by t.area, t.region, t.competition, c.team;
     """
@@ -57,8 +57,8 @@ def query_teams():
             s.url_sportshall,
             s.latitude,
             s.longitude,
-            p.players,
-            p.players_active
+            p.players as 'total players',
+            p.players_active as 'active players'
         from
         teams t 
         inner join locations l on t.team = l.team
@@ -91,7 +91,7 @@ def query_stats_agg():
             sum(h.assists) as Assists,
             (sum(h.goals * 1.0) + sum(h.assists)) / sum(h.wedstrijden) as '(G+A)/W'
         from
-        (select distinct name, team from stats_players) as c
+        (select distinct name, team from stats_players) c
         join stats_players_historical h on c.name = h.name and c.team = h.team
         group by c.name, c.team;
     """
@@ -123,7 +123,7 @@ page = st.sidebar.selectbox("Navigation", NAVBAR_OPTIONS)
 if page == NAVBAR_OPTIONS[0]:
     make_page_home()
 elif page == NAVBAR_OPTIONS[1]:
-    make_page_find_friendly(df_teams)
+    make_page_find_friendly(CONN, df_teams)
 elif page == NAVBAR_OPTIONS[2]:
     make_page_join_team(df_teams)
 elif page == NAVBAR_OPTIONS[3]:

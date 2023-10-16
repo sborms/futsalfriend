@@ -3,8 +3,8 @@ from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
-    # adds single id at the end to all tables as the goal
-    # is not to set up a fully relational database
+    # this simply adds a single id at the end of all tables for easy
+    # reference; the goal is not to set up a fully relational database
     id = Column(Integer, primary_key=True, autoincrement=True)
 
 
@@ -19,6 +19,8 @@ class Competitions(Base):
 
 class Locations(Base):
     __tablename__ = "locations"
+
+    # note: some teams play in multiple sportshalls
 
     team = Column(String)
     sportshall = Column(String)
@@ -51,6 +53,8 @@ class Schedules(Base):
 
 class Sportshalls(Base):
     __tablename__ = "sportshalls"
+
+    # note: some sportshalls are used in several regions
 
     area = Column(String)
     region = Column(String)
@@ -85,6 +89,8 @@ class Standings(Base):
 class StatsPlayers(Base):
     __tablename__ = "stats_players"
 
+    # note: data source issue > some URLs refer to the same player
+
     name = Column(String)
     team = Column(String)
     number = Column(Integer)
@@ -110,6 +116,10 @@ class StatsPlayersHistorical(Base):
 
 class Teams(Base):
     __tablename__ = "teams"
+
+    # note: data source issue > some teams are duplicated across multiple
+    # competitions and some competitions appear duplicated across regions,
+    # for instance 4E KLASSE C GENT <> 1E KLASSE DENDERSTREEK
 
     area = Column(String)
     region = Column(String)

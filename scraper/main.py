@@ -56,8 +56,6 @@ def scrape(config, log_main):
         list_competitions.append(df_competitions_urls)
 
         # get competition teams, schedule & standings, and team player stats & palmares
-        # note: some competitions appear duplicated across regions,
-        # for instance 4E KLASSE C GENT <> 1E KLASSE DENDERSTREEK
         (
             df_teams,
             df_schedules,
@@ -115,7 +113,6 @@ def process_data(config, dict_tables):
         dict_tables.update({data_name: data})  # overwrite modified DataFrame
 
     # create a new DataFrame with the sportshall(s) each team plays in
-    # note: some teams have multiple sportshalls
     df_locations = (
         dict_tables["schedules"][["team1", "sportshall"]]
         .rename(columns={"team1": "team"})
