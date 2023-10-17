@@ -1,6 +1,6 @@
 import streamlit as st
 from ui.coach import make_page_coachbot
-from ui.friendly import make_page_find_friendly
+from ui.friendly import make_page_spot_friendly
 from ui.home import make_page_home
 from ui.stats import make_page_vanity_stats
 from ui.team import make_page_join_team
@@ -21,7 +21,7 @@ CONN = st.experimental_connection("futsalfriend_db", type="sql")
 
 
 @st.cache_data
-def query_players():
+def query_players(_conn):
     q = """
         select distinct
             t.area as Area,
@@ -36,13 +36,13 @@ def query_players():
         order by t.area, t.region, t.competition, c.team;
     """
 
-    df = CONN.query(q)
+    df = _conn.query(q)
 
     return df
 
 
 @st.cache_data
-def query_teams():
+def query_teams(_conn):
     q = """
         select
             t.area,
@@ -75,13 +75,13 @@ def query_teams():
         order by t.team;
     """
 
-    df = CONN.query(q)
+    df = _conn.query(q)
 
     return df
 
 
 @st.cache_data
-def query_stats_agg():
+def query_stats_agg(_conn):
     q = """
         select distinct
             c.name as Name,
@@ -96,13 +96,13 @@ def query_stats_agg():
         group by c.name, c.team;
     """
 
-    df = CONN.query(q)
+    df = _conn.query(q)
 
     return df
 
 
-df_players = query_players()
-df_teams = query_teams()
+df_players = query_players(CONN)
+df_teams = query_teams(CONN)
 
 #################
 ###### app ######
@@ -110,24 +110,24 @@ df_teams = query_teams()
 
 st.title("Futsal Friend")
 
-st.sidebar.title("Services")
+st.sidebar.title("Navigation")
 NAVBAR_OPTIONS = [
-    "Home",
-    "🏆 Find Opponent",
+    "🏠 Home",
+    "🏆 Spot Opponent",
     "👫 Find Team",
-    "😏 Analyse Stats",
+    "😏 Analyze Stats",
     "📣 Get Advice",
 ]
-page = st.sidebar.selectbox("Navigation", NAVBAR_OPTIONS)
+page = st.sidebar.selectbox("Pick a service", NAVBAR_OPTIONS)
 
 if page == NAVBAR_OPTIONS[0]:
     make_page_home()
 elif page == NAVBAR_OPTIONS[1]:
-    make_page_find_friendly(CONN, df_teams)
+    make_page_spot_friendly(CONN, df_teams)
 elif page == NAVBAR_OPTIONS[2]:
     make_page_join_team(df_teams)
 elif page == NAVBAR_OPTIONS[3]:
-    df_stats_agg = query_stats_agg()
+    df_stats_agg = query_stats_agg(CONN)
     make_page_vanity_stats(df_players, df_stats_agg)
 elif page == NAVBAR_OPTIONS[4]:
     make_page_coachbot()

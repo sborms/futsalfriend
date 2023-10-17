@@ -26,9 +26,10 @@ def make_page_join_team(df_teams):
         return
 
     # style output
+    df_out.sort_values("active players", ascending=True, inplace=True)
     df_out = style_table(df_out)
 
     # display output
-    st.markdown("#### Potential teams to join 🤩")
+    st.markdown("#### Possible teams to join 🤩")
     st.markdown("Reach out by going to the respective team page!")
     st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)

@@ -5,6 +5,7 @@ import structlog
 from scraper.db.sqlitedb import SQLiteDB
 from scraper.db.tables import (
     Competitions,
+    Levels,
     Locations,
     Palmares,
     Schedules,
@@ -26,6 +27,7 @@ class Tables(Enum):
     stats_players = StatsPlayers
     stats_players_historical = StatsPlayersHistorical
     teams = Teams
+    levels = Levels
 
 
 def refresh_database(dict_tables, path2db, logger=structlog.get_logger()):

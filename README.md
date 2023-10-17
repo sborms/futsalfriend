@@ -6,7 +6,7 @@
 
 :couple: Do you want to find a team as a new player?
 
-:smirk: Do you care to analyse vanity statistics?
+:smirk: Do you care to analyze vanity statistics?
 
 :mega: Do you desire to receive jolly tactical advice?
 

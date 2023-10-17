@@ -387,6 +387,7 @@ class LZVCupParser(BaseScraper):
             "ds",  # goal difference
             "punten",
             "ptnm",  # points per match
+            "positie",
         ]
         # headers = [
         #     self.clean_str(d.get_text())
@@ -399,11 +400,16 @@ class LZVCupParser(BaseScraper):
         _, rows = self._parse_rows_from_table(table)
 
         # assemble into a DataFrame
-        df = pd.DataFrame(rows, columns=headers)
+        df = pd.DataFrame(rows, columns=headers[:-1])  # "positie" column not there yet
 
-        # drop positions in the team names
-        df["team"] = np.where(
+        # add the positions column and drop positions in the team names
+        df["positie"] = np.where(
             df.index <= 8,  # positions 1-9
+            df["team"].apply(lambda x: x[:1]),
+            df["team"].apply(lambda x: x[:2]),
+        )
+        df["team"] = np.where(
+            df.index <= 8,
             df["team"].apply(lambda x: x[1:]),
             df["team"].apply(lambda x: x[2:]),
         )

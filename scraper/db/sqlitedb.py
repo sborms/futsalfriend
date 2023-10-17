@@ -63,8 +63,10 @@ class SQLiteDB:
         """Executes a query and returns the results as a pandas DataFrame."""
         with self.cursor() as cursor:
             cursor.execute(query_str)
-            df = pd.DataFrame(cursor.fetchall())
-        return df  # TODO: extract and add headers
+            df = pd.DataFrame(
+                cursor.fetchall(), columns=[v[0] for v in cursor.description]
+            )
+        return df
 
     def get_table_classes(self):
         """Gets the tables from the database."""

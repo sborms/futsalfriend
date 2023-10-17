@@ -21,7 +21,7 @@ def filter_players(df, dict_filters):
 
 
 def make_page_vanity_stats(df_players, df_stats_agg):
-    st.header("Display player-level game statistics")
+    st.header("Analyze player-level game statistics")
 
     st.markdown("#### Filters")
     st.markdown("Leave a filter blank to select all available options.")

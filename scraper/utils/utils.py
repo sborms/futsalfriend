@@ -2,6 +2,7 @@ import os
 from ast import literal_eval
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
@@ -83,7 +84,7 @@ def add_coordinates(df, dir_coordinates="data/_coordinates.csv"):
     )
     df.loc[coordinates_missing.index, "coordinates"] = coordinates_missing
 
-    print(f"Nbr. of missing coordinates: {df['coordinates'].isnull().sum()}")
+    # print(f"Remaining missing coordinates: {df['coordinates'].isnull().sum()}")
 
     # create or update existing coordinates file
     df_coordinates_new = df[["sportshall", "address", "coordinates"]]
@@ -100,3 +101,57 @@ def add_coordinates(df, dir_coordinates="data/_coordinates.csv"):
     df = df.drop(columns=["coordinates"])
 
     return df
+
+
+def create_levels_table(df_standings, df_palmares):
+    """Creates a table that associates each team to an estimated competency level."""
+    level_mapping = {1: "Courtois", 2: "Casteels", 3: "Mignolet"}
+
+    # initialize output DataFrame
+    df = df_standings[["team", "region", "competition", "positie", "ptnm"]].copy()
+
+    # create features to indicate slighter lower weights for girls and elderly
+    # sorry for the bias :-)
+    df["w_dames"] = np.where(df["region"].str.contains("Dames"), 0.7, 1)
+    df["w_veteranen"] = np.where(df["competition"].str.contains("Veteranen"), 0.8, 1)
+
+    # create a feature to subdivide based on current division
+    df["w_competition"] = np.where(
+        df["competition"].str.contains("1e"),
+        1,
+        np.where(df["competition"].str.contains("|".join(["4e", "5e"])), 1 / 3, 2 / 3),
+    )
+
+    # create features related to the palmares of each team
+    df_palmares_stats = (
+        df_palmares.groupby("team")
+        .agg(n_seizoenen=("seizoen", "count"), avg_pos=("positie", "mean"))
+        .reset_index()
+    )
+
+    # merge features together
+    df = df.merge(df_palmares_stats, on="team", how="left")
+
+    # fill in palmares stats with median for teams who play their first season
+    df.fillna(
+        {
+            "n_seizoenen": np.nanmedian(df["n_seizoenen"]),
+            "avg_pos": np.nanmedian(df["avg_pos"]),
+        },
+        inplace=True,
+    )
+
+    # assign ranks from 0-1 to nonstandardized features, where higher is better
+    df["w_pos"] = df["positie"].rank(ascending=False, method="dense", pct=True)
+    df["w_ptnm"] = df["ptnm"].rank(method="dense", pct=True)
+    df["w_n_seizoenen"] = df["n_seizoenen"].rank(method="dense", pct=True)
+    df["w_avg_pos"] = df["avg_pos"].rank(ascending=False, method="dense", pct=True)
+
+    # sum up features into a composite score
+    df["score"] = df.filter(regex="w_").sum(axis=1)
+
+    # assign levels based on score
+    df["level"] = pd.qcut(df["score"], q=[0.0, 0.20, 0.80, 1.0], labels=[3, 2, 1])
+    df["level_name"] = df["level"].map(level_mapping)
+
+    return df[["team", "level", "level_name"]]

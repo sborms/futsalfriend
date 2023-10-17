@@ -10,7 +10,7 @@ from scraper.db.update import refresh_database
 from scraper.parsers.lzvcup import LZVCupParser
 from scraper.utils.base import DataStorage
 from scraper.utils.logger import Logger
-from scraper.utils.utils import add_coordinates, postproces_df, ymd
+from scraper.utils.utils import add_coordinates, create_levels_table, postproces_df, ymd
 
 DIR_LOGS = f"{DIR_SCRIPT}/logs/{ymd()}/"  # subdivide logs by day of script execution
 
@@ -86,7 +86,7 @@ def scrape(config, log_main):
 
     # get historical player statistics if enabled in config
     if config["steps"]["historical_players"] is True:
-        log_main.info(f"Processing all historical player statistics")
+        log_main.info("Processing all historical player statistics")
         df_stats_players_historical = LZVCupParser.parse_player_stats_history(
             df_stats_players_all
         )
@@ -103,16 +103,18 @@ def scrape(config, log_main):
     }
 
 
-def process_data(config, dict_tables):
+def process_data(config, dict_tables, log_main):
+    # postprocess initial tables
     for data_name, cols in config["postprocessing"].items():
         data = dict_tables[data_name]
         if data_name == "sportshalls":
             # add coordinates to sportshalls
+            log_main.info("Adding coordinates to sportshalls")
             data = add_coordinates(data, dir_coordinates="data/_coordinates.csv")
         data = postproces_df(data, first_cols=cols[0], drop_cols=cols[1])
         dict_tables.update({data_name: data})  # overwrite modified DataFrame
 
-    # create a new DataFrame with the sportshall(s) each team plays in
+    # create a new table with the sportshall(s) each team plays in
     df_locations = (
         dict_tables["schedules"][["team1", "sportshall"]]
         .rename(columns={"team1": "team"})
@@ -122,6 +124,10 @@ def process_data(config, dict_tables):
     )
     dict_tables.update({"locations": df_locations})
 
+    # create a new table that estimates each team's competency level
+    df_levels = create_levels_table(dict_tables["standings"], dict_tables["palmares"])
+    dict_tables.update({"levels": df_levels})
+
     return dict_tables
 
 
@@ -130,7 +136,7 @@ def store(config, dict_tables, log_main, csv=True):
     refresh_database(dict_tables, path2db=config["database"], logger=log_main)
 
     if csv:
-        # store all tables also as csv files
+        # additionally store all tables as csv files
         root = config["dir_output"]
         for data_name, data in dict_tables.items():
             output_dir = f"{root}/{data_name}.csv"  # overwrites files at every rerun
@@ -153,7 +159,7 @@ if __name__ == "__main__":
     dict_tables = scrape(config, log_main=log)
     log.info("Data scraped")
 
-    dict_tables = process_data(config, dict_tables)
+    dict_tables = process_data(config, dict_tables, log_main=log)
     log.info("Data processed into tables")
 
     store(config, dict_tables, log_main=log)

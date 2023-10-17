@@ -84,6 +84,7 @@ class Standings(Base):
     ds = Column(Integer)
     punten = Column(Integer)
     ptnm = Column(Float)
+    positie = Column(Integer)
 
 
 class StatsPlayers(Base):
@@ -126,3 +127,11 @@ class Teams(Base):
     competition = Column(String)
     team = Column(String)
     url = Column(String)
+
+
+class Levels(Base):
+    __tablename__ = "levels"
+
+    team = Column(String)
+    level = Column(Integer)
+    level_name = Column(String)
