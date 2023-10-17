@@ -51,7 +51,7 @@ def make_page_spot_friendly(conn, df_teams):
         step=1.0,
         format="%.1f",
     )
-    level = col4.selectbox("Level", levels.keys())
+    level = col4.selectbox("Level", levels.keys(), index=2)
     horizon = col5.number_input("When (< days)?", value=14, min_value=3, max_value=30)
 
     today = datetime.today().strftime("%Y-%m-%d")
@@ -65,8 +65,10 @@ def make_page_spot_friendly(conn, df_teams):
     df_out = filter_teams(df_teams, city, address, km)
 
     # join tables together
-    df_out = df_out.merge(df_n_games, on="team", how="inner").merge(
-        df_levels, on="team", how="inner"
+    df_out = (
+        df_out.merge(df_n_games, on="team", how="left")
+        .fillna(0)  # set no games to 0
+        .merge(df_levels, on="team", how="inner")
     )
     if len(df_out) == 0:
         st.warning("No teams found for the specified parameters. Try something else!")

@@ -11,7 +11,7 @@ def make_page_join_team(df_teams):
     address = col2.text_input("Address", "Nieuwstraat")
     km = col3.number_input(
         "Distance (in km)",
-        value=5.0,
+        value=2.0,
         min_value=1.0,
         max_value=50.0,
         step=1.0,

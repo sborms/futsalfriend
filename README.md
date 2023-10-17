@@ -10,11 +10,11 @@
 
 :mega: Do you desire to receive jolly tactical advice?
 
-**Futsal Friend** is a small web application built using player and competition data from [Liefhebbers Zaalvoetbal Cup](https://www.lzvcup.be/) (LZV Cup), a Belgian futsal organisation counting over 900 teams. Its usefulness is not limited to players from one of the LZV Cup leagues.
+**Futsal Friend** is a small [web application](https://futsalfriend.streamlit.app) built using player and competition data from [Liefhebbers Zaalvoetbal Cup](https://www.lzvcup.be) (LZV Cup), a Belgian futsal organisation counting over 900 teams. Its usefulness is not limited to players from one of the LZV Cup leagues.
 
 ## Scraping
 
-The data comes from the [lzvcup.be](https://www.lzvcup.be/) website. Scraping it goes according to the steps defined here.
+The data comes from the [lzvcup.be](https://www.lzvcup.be) website. Scraping it goes according to the steps defined here.
 - **Step 1** - Define a set of main URLs in a config file. Each URL represents a region, which will serve as the starting point. See the `config.json` file.
 - **Step 2** - For each of the areas, go to the URL and grab the so-called region cards which list the competitions and sportshalls in every region. Then extract the URLs for the respective _competitions_ pages (e.g. 2e Klasse) and the single URL for the overview of sportshalls page.
 - **Step 3** - Go to each competition's URL and gather following information:
