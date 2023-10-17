@@ -62,7 +62,9 @@ def make_page_vanity_stats(df_players, df_stats_agg):
         )
         df_players = filter_players(df_players, dict_filters)
 
-    df_players = df_players.drop(columns=["Area", "Region", "Competition"])
+    df_players = df_players.drop(
+        columns=["Area", "Region", "Competition"]
+    ).drop_duplicates()  # avoid goals to be double-counted due to source data issues
 
     st.markdown("#### All-time statistics")
 

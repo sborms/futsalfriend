@@ -2,6 +2,8 @@
 
 [![Run CI/CD pipeline](https://github.com/sborms/futsalfriend/actions/workflows/cicd.yaml/badge.svg)](https://github.com/sborms/futsalfriend/actions/workflows/cicd.yaml)
 
+For those in love with futsal as a way to enjoy sports and to maximize time with friends.
+
 :trophy: Do you need an opponent for a friendly?
 
 :couple: Do you want to find a team as a new player?

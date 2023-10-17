@@ -39,3 +39,7 @@ push:
 debug:
 	@echo ">>> Debugging Python script"
 	python -m pdb -c continue $(script)
+
+app:
+	@echo ">>> Running Streamlit app"
+	streamlit run ./webapp/app.py
