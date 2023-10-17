@@ -1,6 +1,6 @@
 import streamlit as st
 from ui.coach import make_page_coachbot
-from ui.friendly import make_page_spot_friendly
+from ui.friendly import make_page_scout_friendly
 from ui.home import make_page_home
 from ui.stats import make_page_vanity_stats
 from ui.team import make_page_join_team
@@ -113,7 +113,7 @@ st.title("Futsal Friend")
 st.sidebar.title("Navigation")
 NAVBAR_OPTIONS = [
     "🏠 Home",
-    "🏆 Spot Opponent",
+    "🏆 Scout Friendly",
     "👫 Find Team",
     "😏 Analyze Stats",
     "📣 Get Advice",
@@ -123,7 +123,7 @@ page = st.sidebar.selectbox("Pick a service", NAVBAR_OPTIONS)
 if page == NAVBAR_OPTIONS[0]:
     make_page_home()
 elif page == NAVBAR_OPTIONS[1]:
-    make_page_spot_friendly(CONN, df_teams)
+    make_page_scout_friendly(CONN, df_teams)
 elif page == NAVBAR_OPTIONS[2]:
     make_page_join_team(df_teams)
 elif page == NAVBAR_OPTIONS[3]:

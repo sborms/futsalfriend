@@ -34,8 +34,8 @@ def query_nbr_next_games(_conn, dates):
     return df
 
 
-def make_page_spot_friendly(conn, df_teams):
-    st.header("Spot an opponent for a friendly")
+def make_page_scout_friendly(conn, df_teams):
+    st.header("Scout an opponent for a friendly")
 
     # ask for inputs
     levels = {"Courtois 💪💪💪": 1, "Casteels 💪💪": 2, "Mignolet 💪": 3}
