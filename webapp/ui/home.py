@@ -7,7 +7,7 @@ def make_page_home():
     st.write(
         """
         **Futsal Friend** is a simple web application that provides a few useful
-        services to people that love futsal as a way to enjoy sports and maximize
+        services to people that love futsal as a way to enjoy sports and to maximize
         time with friends.
         
         There are four things you can do:
