@@ -41,10 +41,21 @@ The main scraping script includes some nice logging. See below! For more informa
 
 <p align="center"> <img src="assets/showofflogs.png" alt="logs"/> </p>
 
+## Deployment
+
+The application is deployed on Streamlit Community Cloud with just a few clicks. To point to the SQLite database, check out this [documentation](https://docs.streamlit.io/library/advanced-features/connecting-to-data).
+
+To run the application with Docker, you can use these commands:
+
+```bash
+docker build -t futsalfriend -f webapp/Dockerfile .
+docker run -p 8501:8501 futsalfriend
+```
+
 ## Main technologies
 
 ![Python](https://img.shields.io/badge/python-%2314354C.svg?style=for-the-badge&logo=python&logoColor=white)
 ![BeautifulSoup](https://img.shields.io/badge/BeautifulSoup-%2314354C.svg?style=for-the-badge&logo=BeautifulSoup)
-![Streamlit](https://img.shields.io/badge/Streamlit-%2314354C.svg?style=for-the-badge&logo=Streamlit&logoColor=red)
 ![SQLite](https://img.shields.io/badge/SQLite-%2314354C.svg?style=for-the-badge&logo=SQLite&logoColor=blue)
-<!-- ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) -->
+![Docker](https://img.shields.io/badge/docker-%2314354C.svg?style=for-the-badge&logo=docker&logoColor=blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-%2314354C.svg?style=for-the-badge&logo=Streamlit&logoColor=red)

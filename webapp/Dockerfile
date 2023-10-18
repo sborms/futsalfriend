@@ -4,6 +4,10 @@ WORKDIR /webapp
 
 COPY webapp/. /webapp
 
+COPY .streamlit/ /webapp/.streamlit
+
+COPY database/ /webapp/database
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 ENTRYPOINT [ "streamlit" ]

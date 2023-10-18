@@ -108,7 +108,6 @@ def process_data(config, dict_tables, log_main):
     for data_name, cols in config["postprocessing"].items():
         data = dict_tables[data_name]
         if data_name == "sportshalls":
-            # add coordinates to sportshalls
             log_main.info("Adding coordinates to sportshalls")
             data = add_coordinates(data, dir_coordinates="data/_coordinates.csv")
         data = postproces_df(data, first_cols=cols[0], drop_cols=cols[1])
