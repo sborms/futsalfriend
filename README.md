@@ -1,4 +1,4 @@
-# _Futsal Friend_: Your Digital Futsal Companion
+# ⚽ Futsal Friend: Your Digital Futsal Companion
 
 [![Run CI/CD pipeline](https://github.com/sborms/futsalfriend/actions/workflows/cicd.yaml/badge.svg)](https://github.com/sborms/futsalfriend/actions/workflows/cicd.yaml)
 
@@ -59,3 +59,9 @@ docker run -p 8501:8501 futsalfriend
 ![SQLite](https://img.shields.io/badge/SQLite-%2314354C.svg?style=for-the-badge&logo=SQLite&logoColor=blue)
 ![Docker](https://img.shields.io/badge/docker-%2314354C.svg?style=for-the-badge&logo=docker&logoColor=blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-%2314354C.svg?style=for-the-badge&logo=Streamlit&logoColor=red)
+
+## Useful links
+
+The following resources were helpful in setting up this application:
+- [Build your own Notion chatbot](https://blog.streamlit.io/build-your-own-notion-chatbot)
+- [GPT Lab](https://github.com/dclin/gptlab-streamlit)

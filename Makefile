@@ -42,4 +42,4 @@ debug:
 
 app:
 	@echo ">>> Running Streamlit app"
-	streamlit run ./webapp/app.py
+	streamlit run ./webapp/01_Home.py

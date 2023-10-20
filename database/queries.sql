@@ -60,7 +60,8 @@ with
 first_home_game as
 (select
     team1 as team,
-    date as date_home
+    date as date_home,
+    team2 as opponent
 from (
     select *,
         row_number() over(partition by team1 order by date asc) as row_n
@@ -72,7 +73,8 @@ where row_n = 1),
 first_away_game as
 (select
     team2 as team,
-    date as date_away
+    date as date_away,
+    team1 as opponent
 from (
     select *,
         row_number() over(partition by team2 order by date asc) as row_n
@@ -83,7 +85,8 @@ where row_n = 1)
 
 select 
     h.team,
-    min(h.date_home, a.date_away) as next_game
+    min(h.date_home, a.date_away) as next_game,
+    h.opponent
 from
 first_home_game h
 inner join first_away_game a on h.team = a.team;
@@ -110,3 +113,31 @@ union all
 select team2 as team, count(*) as n from horizon_set group by team2
 )
 group by team;
+
+/* teams */
+select
+    t.*,
+    name,
+    wedstrijden as games,
+    goals,
+    assists
+from stats_players s 
+join (
+    select area, region, competition, team from teams
+) t on s.team = t.team;
+
+/* standings */
+select
+    area,
+    region,
+    competition,
+    positie as position,
+    team,
+    gespeeld as games,
+    gewonnen as won,
+    gelijk as draw,
+    verloren as lost,
+    dg as 'goals for',
+    dt as 'goals against',
+    punten as points
+from standings;

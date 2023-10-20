@@ -1,7 +1,13 @@
+import streamlit as st
 from geopy.distance import distance
 from geopy.geocoders import Nominatim
 
 geolocator = Nominatim(user_agent="address_finder").geocode
+
+
+@st.cache_resource
+def get_sqlite_connection():
+    return st.experimental_connection("futsalfriend_db", type="sql")
 
 
 def get_coordinates(address, city, country="Belgium"):
@@ -78,3 +84,24 @@ def style_table(df, drop_cols=[]):
     df = df.style.map(lambda x: "text-align: left;").hide(axis="index")
 
     return df
+
+
+def add_socials_to_navbar():
+    """Adds social media buttons to the Streamlit sidebar."""
+    st.markdown(
+        """
+        <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
+        <style>i {padding-right: 7px;}</style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    def social_button(url, label, icon):
+        button_code = (
+            f"<a href='{url}' target=_blank><i class='fa {icon}'></i>{label}</a>"
+        )
+        return st.markdown(button_code, unsafe_allow_html=True)
+
+    with st.sidebar:
+        social_button("https://twitter.com/samborms", "Twitter", "fa-twitter")
+        social_button("http://linkedin.com/in/sam-borms", "LinkedIn", "fa-linkedin")

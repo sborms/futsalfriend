@@ -20,3 +20,6 @@ matplotlib
 plotly
 sqlalchemy
 geopy
+langchain
+openai
+hugchat
