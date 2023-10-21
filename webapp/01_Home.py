@@ -51,7 +51,7 @@ with st.expander("Does this mean you are affiliated with LZV Cup?"):
         by the way."""
     )
 
-with st.expander("Should you already play in LZV Cup?"):
+with st.expander("Should you play in LZV Cup to benefit from this app?"):
     st.markdown(
         """
         Most functionality depends on you playing in a team that participates in
@@ -73,4 +73,12 @@ with st.expander("Who made this?"):
     )
 
 with st.expander("Last but not least, how much does it cost?"):
-    st.markdown("Nothing!")
+    st.markdown(
+        """
+        Nothing! You can try out a basic coachbot version for free. If you want to use
+        the more advanced version based on an OpenAI language model, make an account on
+        [openai.com](https://platform.openai.com/account/api-keys) and add your API key.
+        For normal usage, you will incur tiny costs. If you are new, you might even
+        benefit from $5 of free credits.
+        """
+    )

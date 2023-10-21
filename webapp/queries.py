@@ -113,42 +113,62 @@ def query_stats_agg(_conn):
 
 
 @st.cache_data
-def query_next_games(_conn):
-    q = """
-        with
-        first_home_game as
-        (select
-            team1 as team,
-            date as date_home,
-            team2 as opponent
-        from (
-            select *,
-                row_number() over(partition by team1 order by date asc) as row_n
-            from schedules
-            where goals1 is NULL
-        )
-        where row_n = 1), 
+def query_list_teams(_conn):
+    return _conn.query("select distinct team from teams;")
 
-        first_away_game as
-        (select
-            team2 as team,
-            date as date_away,
-            team1 as opponent
-        from (
-            select *,
-                row_number() over(partition by team2 order by date asc) as row_n
-            from schedules
-            where goals1 is NULL
-        )
-        where row_n = 1)
 
-        select 
-            h.team,
-            min(h.date_home, a.date_away) as next_game,
-            h.opponent
-        from
-        first_home_game h
-        inner join first_away_game a on h.team = a.team;
+@st.cache_data
+def query_schedule(_conn, team):
+    q = f"""
+        select
+            date,
+            team1 as 'team home', 
+            team2 as 'team away'
+        from schedules
+        where (goals1 is NULL) and (team1 = '{team}' or team2 = '{team}');
+    """
+
+    df = _conn.query(q)
+
+    return df
+
+
+@st.cache_data
+def query_stats_players(_conn, team):
+    q = f"""
+        select
+            team,
+            name,
+            wedstrijden as games,
+            goals,
+            assists
+        from stats_players
+        where team = '{team}';
+    """
+
+    df = _conn.query(q)
+
+    return df
+
+
+@st.cache_data
+def query_standings(_conn, team):
+    q = f"""
+        select
+            positie as position,
+            team,
+            gespeeld as games,
+            gewonnen as won,
+            gelijk as draw,
+            verloren as lost,
+            dg as 'goals for',
+            dt as 'goals against',
+            punten as points
+        from standings s
+        join (
+            select distinct region, competition from teams where team = '{team}'
+        ) t
+        on s.region = t.region and s.competition = t.competition;
     """
 
     df = _conn.query(q)

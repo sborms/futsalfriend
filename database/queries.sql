@@ -55,6 +55,35 @@ from
 join stats_players_historical h on c.name = h.name and c.team = h.team
 group by c.name, c.team;
 
+/* schedule - number of games within horizon */
+with 
+horizon_set as 
+(select
+    date,
+    team1,
+    team2
+from
+schedules
+where goals1 is NULL and date >= '2023-10-16' and date <= '2023-11-05'
+order by team1)
+
+select 
+    team,
+    sum(n) as games
+from 
+(
+select team1 as team, count(*) as n from horizon_set group by team1
+union all
+select team2 as team, count(*) as n from horizon_set group by team2
+)
+group by team;
+
+/* teams */
+select distinct team from teams;
+
+/* schedule */
+select date, team1 as 'team home', team2 as 'team away' from schedules where (goals1 is NULL) and (team1 = 'ZVC Copains' or team2 = 'ZVC Copains');
+
 /* schedule - next game date */
 with
 first_home_game as
@@ -91,30 +120,7 @@ from
 first_home_game h
 inner join first_away_game a on h.team = a.team;
 
-/* schedule - number of games within horizon */
-with 
-horizon_set as 
-(select
-    date,
-    team1,
-    team2
-from
-schedules
-where goals1 is NULL and date >= '2023-10-16' and date <= '2023-11-05'
-order by team1)
-
-select 
-    team,
-    sum(n) as games
-from 
-(
-select team1 as team, count(*) as n from horizon_set group by team1
-union all
-select team2 as team, count(*) as n from horizon_set group by team2
-)
-group by team;
-
-/* teams */
+/* stats players */
 select
     t.*,
     name,
@@ -128,9 +134,6 @@ join (
 
 /* standings */
 select
-    area,
-    region,
-    competition,
     positie as position,
     team,
     gespeeld as games,
@@ -140,4 +143,8 @@ select
     dg as 'goals for',
     dt as 'goals against',
     punten as points
-from standings;
+from standings s
+join (
+    select distinct region, competition from teams where team = 'ZVC Copains'
+) t
+on s.region = t.region and s.competition = t.competition;

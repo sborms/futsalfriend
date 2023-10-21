@@ -4,7 +4,7 @@ import utils
 
 st.set_page_config(page_title="Team Finder", page_icon="👫", layout="wide")
 
-conn = utils.get_sqlite_connection()
+conn = utils.connect_to_sqlite_db()
 df_teams = queries.query_teams(conn)
 
 ##################

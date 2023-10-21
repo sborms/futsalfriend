@@ -24,7 +24,7 @@ def filter_players(df, dict_filters):
     return df
 
 
-conn = utils.get_sqlite_connection()
+conn = utils.connect_to_sqlite_db()
 df_players = queries.query_players(conn)
 df_stats_agg = queries.query_stats_agg(conn)
 

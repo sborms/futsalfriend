@@ -5,4 +5,3 @@ sqlalchemy==2.0.22
 geopy==2.4.0
 langchain==0.0.317
 openai==0.28.1
-python-dotenv==1.0.0
