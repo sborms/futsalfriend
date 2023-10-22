@@ -8,20 +8,19 @@ from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import PromptTemplate
 from openai.error import AuthenticationError
+import openai
 
 st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 
 
 @st.cache_resource()
-def load_chain(input_openai_api_key="sk-...", context=""):
+def load_chain(input_openai_api_key=openai.api_key, context=""):
     """Configures a conversational chain for answering user questions."""
-    if input_openai_api_key is None:  # avoid pydantic.v1.error_wrappers.ValidationError
-        input_openai_api_key = "sk-..."
+    print(f"inside: {input_openai_api_key}")
     # load OpenAI's language model
     llm = ChatOpenAI(
         temperature=0.5, model="gpt-3.5-turbo", openai_api_key=input_openai_api_key
     )
-    del input_openai_api_key
 
     # create chat history memory
     memory = ConversationBufferWindowMemory(
@@ -126,6 +125,9 @@ else:
                     placeholder="sk-...",
                     # value="sk-..."
                 )
+            
+            openai.api_key = input_openai_api_key
+            print(f"outside: {openai.api_key}")
 
     st.markdown(
         "*You can **try** to write in any language other than English. "
@@ -153,7 +155,7 @@ else:
     context = prepare_prompt_team_context(dict_info)
 
     # configure chain
-    chain = load_chain(input_openai_api_key, context=context)
+    chain = load_chain(input_openai_api_key=openai.api_key, context=context)
 
     # initialize chat history
     if "messages" not in st.session_state:
