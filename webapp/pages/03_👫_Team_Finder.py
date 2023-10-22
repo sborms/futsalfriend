@@ -36,11 +36,11 @@ with st.spinner("Finding teams..."):
 
     if len(df_out) == 0:
         st.warning("No teams found for the specified parameters. Try something else!")
+    else:
+        # style output
+        df_out.sort_values("active players", ascending=True, inplace=True)
+        df_out = utils.style_table(df_out)
 
-    # style output
-    df_out.sort_values("active players", ascending=True, inplace=True)
-    df_out = utils.style_table(df_out)
-
-    # display table
-    st.markdown("Reach out by going to the respective team page!")
-    st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)
+        # display table
+        st.markdown("Reach out by going to the respective team page!")
+        st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)

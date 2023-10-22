@@ -66,9 +66,9 @@ with st.expander("How often is the data updated?"):
 with st.expander("Who made this?"):
     st.markdown(
         """
-        I am Sam, a futsal enthusiast and a freelance data scientist. Check out my
-        social media profiles on the left or the open-source GitHub repository for this
-        app on top. I created this app as a fun side project. Oh yes, and I play for
+        I am Sam, a futsal enthusiast and a freelance data scientist. I created this
+        as a fun side project. Check out my social media profiles on the left or the
+        open-source GitHub repository for the app on top. Oh yes, and I play for
         ZVC Copains.
         """
     )

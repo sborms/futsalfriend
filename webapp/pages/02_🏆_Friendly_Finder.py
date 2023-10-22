@@ -54,14 +54,19 @@ with st.spinner("Finding teams..."):
         .fillna(0)  # set no games to 0
         .merge(df_levels, on="team", how="inner")
     )
+
     if len(df_out) == 0:
         st.warning("No teams found for the specified parameters. Try something else!")
+    else:
+        # style output
+        df_out.sort_values("games", ascending=True, inplace=True)
+        df_out = utils.style_table(
+            df_out, drop_cols=["total players", "active players"]
+        )
 
-    # style output
-    df_out.sort_values("games", ascending=True, inplace=True)
-    df_out = utils.style_table(df_out, drop_cols=["total players", "active players"])
-
-    # display table
-    # st.markdown("Reach out by going to the respective team page!")
-    st.write(f"_The last column shows the amount of scheduled games until {max_date}._")
-    st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)
+        # display table
+        # st.markdown("Reach out by going to the respective team page!")
+        st.write(
+            f"_The last column shows the amount of scheduled games until {max_date}._"
+        )
+        st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)
