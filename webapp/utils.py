@@ -5,7 +5,7 @@ from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="address_finder").geocode
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def connect_to_sqlite_db():
     """Returns SQLite connection."""
     return st.experimental_connection("futsalfriend_db", type="sql")

@@ -1,5 +1,6 @@
 import time
 
+import openai
 import queries
 import streamlit as st
 import utils
@@ -8,7 +9,6 @@ from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import PromptTemplate
 from openai.error import AuthenticationError
-import openai
 
 st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 
@@ -65,6 +65,10 @@ def prepare_prompt_team_context(dict_info):
     return context
 
 
+def lets_chat():
+    st.session_state["lets_chat"] = True
+
+
 conn = utils.connect_to_sqlite_db()
 
 ##################
@@ -77,21 +81,27 @@ avatar_player = "assets/player.svg"
 st.title("💬 Coachbot")
 st.markdown("### Seek advice from an AI futsal coach")
 
+# initialize session state
+if "team" not in st.session_state and "lets_chat" not in st.session_state:
+    st.session_state["team"] = "ZVC Copains"
+    st.session_state["lets_chat"] = False
+
 # ask for team first
-if "team" not in st.session_state:
-    df_teams = queries.query_list_teams(conn)
+if not st.session_state["lets_chat"]:
+    teams_all = queries.query_list_teams(conn)["team"].tolist()
 
     col1, _, _ = st.columns(3)
     team = col1.selectbox(
         "First tell me what team you play for",
-        options=df_teams["team"].tolist(),
+        options=teams_all,
+        index=teams_all.index(st.session_state["team"]),
     )
     st.session_state["team"] = team
 
-    go = st.button("Let's chat!")
+    st.button("Let's chat!", on_click=lets_chat)
 
 # initialize navbar and chat window
-if go:
+if st.session_state["lets_chat"]:
     with st.sidebar:
         with st.container():
             st.success(
@@ -112,7 +122,7 @@ if go:
             if "Basic" in bot_type:
                 input_openai_api_key = st.secrets["openai"]["api_key_free"]
             elif "Advanced" in bot_type:
-                load_chain.clear()  # clear cache to reload with new API key
+                # load_chain.clear()  # clear cache
                 st.info(
                     """
                     Enter your OpenAI API key (we won't expose it!) to use your own account.
@@ -125,7 +135,7 @@ if go:
                     placeholder="sk-...",
                     # value="sk-..."
                 )
-            
+
             openai.api_key = input_openai_api_key
 
     st.markdown(
