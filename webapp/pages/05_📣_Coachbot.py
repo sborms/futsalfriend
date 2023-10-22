@@ -13,13 +13,15 @@ st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 
 
 @st.cache_resource()
-def load_chain(openai_api_key="sk-...", context=""):
+def load_chain(input_openai_api_key="sk-...", context=""):
     """Configures a conversational chain for answering user questions."""
+    if input_openai_api_key is None:  # avoid pydantic.v1.error_wrappers.ValidationError
+        input_openai_api_key = "sk-..."
     # load OpenAI's language model
     llm = ChatOpenAI(
-        temperature=0.5, model="gpt-3.5-turbo", openai_api_key=openai_api_key
+        temperature=0.5, model="gpt-3.5-turbo", openai_api_key=input_openai_api_key
     )
-    del openai_api_key
+    del input_openai_api_key
 
     # create chat history memory
     memory = ConversationBufferWindowMemory(
@@ -110,7 +112,7 @@ else:
             )
 
             if "Basic" in bot_type:
-                openai_api_key = st.secrets["openai"]["api_key_free"]
+                input_openai_api_key = st.secrets["openai"]["api_key_free"]
             elif "Advanced" in bot_type:
                 st.info(
                     """
@@ -118,7 +120,7 @@ else:
                     For pricing info see [here](https://openai.com/pricing#language-models).
                     """
                 )
-                openai_api_key = st.text_input(
+                input_openai_api_key = st.text_input(
                     "Paste your key here:",
                     type="password",
                     placeholder="sk-...",
@@ -151,7 +153,7 @@ else:
     context = prepare_prompt_team_context(dict_info)
 
     # configure chain
-    chain = load_chain(openai_api_key, context=context)
+    chain = load_chain(input_openai_api_key, context=context)
 
     # initialize chat history
     if "messages" not in st.session_state:
