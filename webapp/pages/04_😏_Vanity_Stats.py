@@ -74,8 +74,8 @@ df_players = df_players.drop(
 
 st.markdown("#### All-time statistics")
 
-# get desired metric, minimum number of games played and plot type
-col1, col2, col3 = st.columns(3)
+# get desired metric, minimum number of games played, and plot type
+col1, col2, col3, _ = st.columns(4)
 stat_col = col1.selectbox(
     "Statistic", ["Games", "Goals", "Assists", "(G+A)/W"], index=1
 )

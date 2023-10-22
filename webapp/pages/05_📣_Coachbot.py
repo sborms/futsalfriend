@@ -133,7 +133,7 @@ if st.session_state["lets_chat"]:
                     "Paste your key here:",
                     type="password",
                     placeholder="sk-...",
-                    # value="sk-...",
+                    value="sk-...",
                 )
 
     st.markdown(
