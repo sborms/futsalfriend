@@ -5,7 +5,7 @@ st.set_page_config(
     page_title="Futsal Friend",
     page_icon="⚽",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",  # "collapsed"
 )
 
 ##################
@@ -66,19 +66,20 @@ with st.expander("How often is the data updated?"):
 with st.expander("Who made this?"):
     st.markdown(
         """
-        I'm a futsal enthusiast and freelance data scientist. Check out my details 
-        on the left. I created this app as a fun side project. Oh yes, and I play
-        for ZVC Copains.
+        I am Sam, a futsal enthusiast and a freelance data scientist. Check out my
+        social media profiles on the left or the open-source GitHub repository for this
+        app on top. I created this app as a fun side project. Oh yes, and I play for
+        ZVC Copains.
         """
     )
 
 with st.expander("Last but not least, how much does it cost?"):
     st.markdown(
         """
-        Nothing! You can try out a basic coachbot version for free. If you want to use
-        the more advanced version based on an OpenAI language model, make an account on
-        [openai.com](https://platform.openai.com/account/api-keys) and add your API key.
-        For normal usage, you will incur tiny costs. If you are new, you might even
-        benefit from $5 of free credits.
+        Nothing! Well... For the coachbot, you can temporarily try out a version for
+        free. To have the best experience, we recommend making an account yourself on
+        [openai.com](https://platform.openai.com/account/api-keys) and creating an API
+        key. For normal usage, you will then incur tiny costs. If you are new, you
+        might even benefit from $5 of free credits.
         """
     )

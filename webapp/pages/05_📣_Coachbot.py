@@ -1,6 +1,5 @@
 import time
 
-import openai
 import queries
 import streamlit as st
 import utils
@@ -8,41 +7,44 @@ from langchain.chains import ConversationChain
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import PromptTemplate
+from openai.error import AuthenticationError
 
 st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 
 
-@st.cache_resource
-def load_chain(bot_type="Advanced", context=""):
+@st.cache_resource()
+def load_chain(openai_api_key, context=""):
     """Configures a conversational chain for answering user questions."""
-    # load basic or advanced language model
-    if "Advanced" in bot_type:
-        llm = ChatOpenAI(
-            temperature=0.7, model="gpt-3.5-turbo", openai_api_key=openai.api_key
-        )
+    # load OpenAI's language model
+    llm = ChatOpenAI(
+        temperature=0.5, model="gpt-3.5-turbo", openai_api_key=openai_api_key
+    )
+    del openai_api_key
 
     # create chat history memory
-    memory = ConversationBufferWindowMemory(k=2, memory_key="history")
+    memory = ConversationBufferWindowMemory(
+        k=3, memory_key="history", ai_prefix="Coach"
+    )
 
-    # create system prompt
+    # create prompt
     prefix = f"""
     You are an AI assistant that provides advice to futsal teams.
-    Futsal is played 5-a-side on a small indoor field.
+    Futsal is played 5 against 5 on a small indoor field.
     You are given the following information and a question.
     Provide a conversational answer. Be witty but concise. Don't make up an answer.
     If the question is not about futsal, inform that you are tuned
     to only answer questions about futsal.
 
-    This is relevant information about the team and competition:
+    Below is relevant information about the team and competition.
     {context}
     """
     template = (
         prefix
-        + """
-    History: {history}
+        + """History:
+
+    \n{history}\n
+    
     Question: {input}
-        
-    Helpful answer here, in Dutch:
     """
     )
 
@@ -56,8 +58,8 @@ def load_chain(bot_type="Advanced", context=""):
 
 
 def prepare_prompt_team_context(dict_info):
-    """Prepares a string with team and player stats for the prompt."""
-    context = ""
+    """Prepares a string with relevant team information as context for the prompt."""
+    context = "\n"
     for title, df in dict_info.items():
         context += title + ":\n" + df.to_string(index=False) + "\n\n"
     return context
@@ -65,53 +67,52 @@ def prepare_prompt_team_context(dict_info):
 
 conn = utils.connect_to_sqlite_db()
 
-# openai.api_key = st.secrets["OPENAI_API_KEY"]
-
 ##################
 ########## UI   ##
 ##################
 
-avatar = "assets/capi.png"
+avatar_ai = "assets/capi.png"
+avatar_player = "assets/player.svg"
 
 with st.sidebar:
     with st.container():
+        st.success(
+            "The bot uses OpenAI's **GPT-3.5 Turbo** language model.",
+            icon="ℹ️",
+        )
+
         bot_type = st.radio(
-            "Choose a type of bot",
+            "Choose a type of chatbot",
             ["Basic", ":red[Advanced]"],
             captions=[
-                "Free but not as accurate.",
-                "Not entirely free but more capable.",
+                "Free until it lasts but slower.",
+                "Paid but faster and more capable.",
             ],
-            index=1,
+            index=0,
         )
-        if "Advanced" in bot_type:
+
+        if "Basic" in bot_type:
+            openai_api_key = st.secrets["openai"]["api_key_free"]
+        elif "Advanced" in bot_type:
             st.info(
                 """
-                Enter your OpenAI API key to use the advanced **GPT-3.5 Turbo**
-                language model. We won't expose your key! Information about pricing
-                is [here](https://openai.com/pricing#language-models).
+                Enter your OpenAI API key (we won't expose it!) to use your own account.
+                See pricing info [here](https://openai.com/pricing#language-models).
                 """
             )
-            input_openai_key = st.text_input(
-                "Paste your OpenAI API key here",
+            openai_api_key = st.text_input(
+                "Paste your key here:",
                 type="password",
                 placeholder="sk-...",
             )
 
-            # add and destroy API key
-            openai.api_key = input_openai_key
-            del input_openai_key
-
 st.title("💬 Coachbot")
 st.markdown("### Seek advice from an AI futsal coach")
 
-df_teams = queries.query_list_teams(conn)
-
-if "team" not in st.session_state:
-    st.session_state["team"] = None
-
 # ask for team first
-if st.session_state["team"] is None:
+if "team" not in st.session_state:
+    df_teams = queries.query_list_teams(conn)
+
     col1, _, _ = st.columns(3)
     team = col1.selectbox(
         "First tell me what team you play for",
@@ -124,7 +125,10 @@ if st.session_state["team"] is None:
 
 # initialize chat window
 else:
-    st.markdown("*Take what the bot says with a grain of salt.*")
+    st.markdown(
+        "*You can **try** to write in any language other than English. "
+        "Take what the bot says with a grain of salt.* 😊"
+    )
 
     # get relevant information to add as context to prompt
     team = st.session_state["team"]
@@ -147,7 +151,7 @@ else:
     context = prepare_prompt_team_context(dict_info)
 
     # configure chain
-    chain = load_chain(bot_type=bot_type, context=context)
+    chain = load_chain(openai_api_key, context=context)
 
     # initialize chat history
     if "messages" not in st.session_state:
@@ -161,25 +165,30 @@ else:
     # display chat messages from history on app rerun
     for message in st.session_state.messages:
         if message["role"] == "assistant":
-            with st.chat_message(message["role"], avatar=avatar):
+            with st.chat_message(message["role"], avatar=avatar_ai):
                 st.markdown(message["content"])
         else:
-            with st.chat_message(message["role"]):
+            with st.chat_message(message["role"], avatar=avatar_player):
                 st.markdown(message["content"])
 
     if query := st.chat_input("Talk to me..."):
         # display user message
-        with st.chat_message("user"):
+        with st.chat_message("user", avatar=avatar_player):
             st.markdown(query)
 
         # add user message to chat history
         st.session_state.messages.append({"role": "user", "content": query})
 
         # display chatbot message
-        with st.chat_message("assistant", avatar=avatar):
+        with st.chat_message("assistant", avatar=avatar_ai):
             # send user's question to chain
-            result = chain({"input": query})
-            response = result["response"]
+            try:
+                result = chain({"input": query})
+            except AuthenticationError:
+                st.warning("Your API key is invalid or expired. Please correct.")
+                st.stop()
+
+            response = result["response"].replace("Coach: ", "")
 
             message_placeholder, full_response = st.empty(), ""
             for chunk in response.split():
