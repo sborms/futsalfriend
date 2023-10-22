@@ -14,7 +14,7 @@ For those in love with futsal as a way to enjoy sports and to maximize time with
 
 **Futsal Friend** is a small [web application](https://futsalfriend.streamlit.app) built using player and competition data from [Liefhebbers Zaalvoetbal Cup](https://www.lzvcup.be) (LZV Cup), a Belgian futsal organisation counting over 900 teams. Its usefulness is not limited to players from one of the LZV Cup leagues.
 
-[![demo Futsal Friend](assets/futsalfriend-demo-17Oct2023.gif)](https://futsalfriend.streamlit.app)
+[![demo Futsal Friend](assets/futsalfriend-demo-22Oct2023.gif)](https://futsalfriend.streamlit.app)
 
 ## Scraping
 
