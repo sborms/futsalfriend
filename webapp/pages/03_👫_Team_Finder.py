@@ -27,17 +27,20 @@ km = col3.number_input(
     format="%.1f",
 )
 
-# filter teams based on parameters
-df_out = utils.filter_teams(df_teams, city, address, km)
-
-if len(df_out) == 0:
-    st.warning("No teams found for the specified parameters. Try something else!")
-
-# style output
-df_out.sort_values("active players", ascending=True, inplace=True)
-df_out = utils.style_table(df_out)
-
-# display output
+# show output header
 st.markdown("#### Possible teams to join 🤩")
-st.markdown("Reach out by going to the respective team page!")
-st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+with st.spinner("Finding teams..."):
+    # filter teams based on parameters
+    df_out = utils.filter_teams(df_teams, city, address, km)
+
+    if len(df_out) == 0:
+        st.warning("No teams found for the specified parameters. Try something else!")
+
+    # style output
+    df_out.sort_values("active players", ascending=True, inplace=True)
+    df_out = utils.style_table(df_out)
+
+    # display table
+    st.markdown("Reach out by going to the respective team page!")
+    st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)

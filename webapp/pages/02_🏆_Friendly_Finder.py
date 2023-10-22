@@ -37,28 +37,31 @@ horizon = col5.number_input("When (< days)?", value=14, min_value=3, max_value=3
 today = datetime.today().strftime("%Y-%m-%d")
 max_date = (datetime.today() + timedelta(days=horizon)).strftime("%Y-%m-%d")
 
-# query tables for specified parameters
-df_levels = conn.query(f"select team from levels where level = {levels[level]};")
-df_n_games = queries.query_nbr_next_games(conn, dates=[today, max_date])
-
-# filter teams based on remaining parameters
-df_out = utils.filter_teams(df_teams, city, address, km)
-
-# join tables together
-df_out = (
-    df_out.merge(df_n_games, on="team", how="left")
-    .fillna(0)  # set no games to 0
-    .merge(df_levels, on="team", how="inner")
-)
-if len(df_out) == 0:
-    st.warning("No teams found for the specified parameters. Try something else!")
-
-# style output
-df_out.sort_values("games", ascending=True, inplace=True)
-df_out = utils.style_table(df_out, drop_cols=["total players", "active players"])
-
-# display output
+# show output header
 st.markdown("#### Potential play partners 🥰")
-# st.markdown("Reach out by going to the respective team page!")
-st.write(f"_The last column shows the amount of scheduled games until {max_date}._")
-st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+with st.spinner("Finding teams..."):
+    # query tables for specified parameters
+    df_levels = conn.query(f"select team from levels where level = {levels[level]};")
+    df_n_games = queries.query_nbr_next_games(conn, dates=[today, max_date])
+
+    # filter teams based on remaining parameters
+    df_out = utils.filter_teams(df_teams, city, address, km)
+
+    # join tables together
+    df_out = (
+        df_out.merge(df_n_games, on="team", how="left")
+        .fillna(0)  # set no games to 0
+        .merge(df_levels, on="team", how="inner")
+    )
+    if len(df_out) == 0:
+        st.warning("No teams found for the specified parameters. Try something else!")
+
+    # style output
+    df_out.sort_values("games", ascending=True, inplace=True)
+    df_out = utils.style_table(df_out, drop_cols=["total players", "active players"])
+
+    # display table
+    # st.markdown("Reach out by going to the respective team page!")
+    st.write(f"_The last column shows the amount of scheduled games until {max_date}._")
+    st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)

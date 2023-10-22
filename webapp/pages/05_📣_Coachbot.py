@@ -74,38 +74,6 @@ conn = utils.connect_to_sqlite_db()
 avatar_ai = "assets/capi.png"
 avatar_player = "assets/player.svg"
 
-with st.sidebar:
-    with st.container():
-        st.success(
-            "The bot uses OpenAI's **GPT-3.5 Turbo** language model.",
-            icon="ℹ️",
-        )
-
-        bot_type = st.radio(
-            "Choose a type of chatbot",
-            ["Basic", ":red[Advanced]"],
-            captions=[
-                "Free until it lasts but slower.",
-                "Paid but faster and more capable.",
-            ],
-            index=0,
-        )
-
-        if "Basic" in bot_type:
-            openai_api_key = st.secrets["openai"]["api_key_free"]
-        elif "Advanced" in bot_type:
-            st.info(
-                """
-                Enter your OpenAI API key (we won't expose it!) to use your own account.
-                See pricing info [here](https://openai.com/pricing#language-models).
-                """
-            )
-            openai_api_key = st.text_input(
-                "Paste your key here:",
-                type="password",
-                placeholder="sk-...",
-            )
-
 st.title("💬 Coachbot")
 st.markdown("### Seek advice from an AI futsal coach")
 
@@ -117,17 +85,48 @@ if "team" not in st.session_state:
     team = col1.selectbox(
         "First tell me what team you play for",
         options=df_teams["team"].tolist(),
-        index=None,
     )
     st.session_state["team"] = team
 
     st.button("Let's chat!")
 
-# initialize chat window
+# initialize navbar and chat window
 else:
+    with st.sidebar:
+        with st.container():
+            st.success(
+                "The chatbot uses OpenAI's **GPT-3.5 Turbo** language model.",
+                icon="ℹ️",
+            )
+
+            bot_type = st.radio(
+                "Choose a type of bot",
+                ["Basic", ":red[Advanced]"],
+                captions=[
+                    "Free until it lasts but slower.",
+                    "Paid but faster and more capable.",
+                ],
+                index=0,
+            )
+
+            if "Basic" in bot_type:
+                openai_api_key = st.secrets["openai"]["api_key_free"]
+            elif "Advanced" in bot_type:
+                st.info(
+                    """
+                    Enter your OpenAI API key (we won't expose it!) to use your own account.
+                    For pricing info see [here](https://openai.com/pricing#language-models).
+                    """
+                )
+                openai_api_key = st.text_input(
+                    "Paste your key here:",
+                    type="password",
+                    placeholder="sk-...",
+                )
+
     st.markdown(
         "*You can **try** to write in any language other than English. "
-        "Take what the bot says with a grain of salt.* 😊"
+        "Always take what the bot says with a grain of salt.* 😊"
     )
 
     # get relevant information to add as context to prompt
@@ -185,7 +184,7 @@ else:
             try:
                 result = chain({"input": query})
             except AuthenticationError:
-                st.warning("Your API key is invalid or expired. Please correct.")
+                st.warning("Your API key is invalid or expired...")
                 st.stop()
 
             response = result["response"].replace("Coach: ", "")
