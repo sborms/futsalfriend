@@ -86,8 +86,6 @@ if "team" not in st.session_state:
     st.session_state["team"] = "ZVC Copains"
 if "lets_chat" not in st.session_state:
     st.session_state["lets_chat"] = False
-if "chain" not in st.session_state:
-    st.session_state["chain"] = None
 
 # ask for team first
 if not st.session_state["lets_chat"]:
@@ -136,7 +134,8 @@ if st.session_state["lets_chat"]:
                     "Paste your key here:",
                     type="password",
                     placeholder="sk-...",
-                    # value="sk-..."
+                    value="sk-...",
+                    
                 )
 
             openai.api_key = input_openai_api_key
@@ -168,7 +167,6 @@ if st.session_state["lets_chat"]:
 
     # configure chain
     chain = load_chain(input_openai_api_key=openai.api_key, context=context)
-    st.session_state["chain"] = chain
 
     # initialize chat history
     if "messages" not in st.session_state:
@@ -200,7 +198,7 @@ if st.session_state["lets_chat"]:
         with st.chat_message("assistant", avatar=avatar_ai):
             # send user's question to chain
             try:
-                result = st.session_state["chain"]({"input": query})
+                result = chain({"input": query})
             except AuthenticationError:
                 st.warning("Your API key is invalid or expired...")
                 st.stop()
