@@ -1,6 +1,5 @@
 import time
 
-import openai
 import queries
 import streamlit as st
 import utils
@@ -13,8 +12,8 @@ from openai.error import AuthenticationError
 st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 
 
-# @st.cache_resource()
-def load_chain(input_openai_api_key=openai.api_key, context=""):
+@st.cache_resource()
+def load_chain(input_openai_api_key, context=""):
     """Configures a conversational chain for answering user questions."""
     # load OpenAI's language model
     llm = ChatOpenAI(
@@ -134,11 +133,8 @@ if st.session_state["lets_chat"]:
                     "Paste your key here:",
                     type="password",
                     placeholder="sk-...",
-                    value="sk-...",
-                    
+                    value="sk-...",                    
                 )
-
-            openai.api_key = input_openai_api_key
 
     st.markdown(
         "*You can **try** to write in any language other than English. "
@@ -166,7 +162,7 @@ if st.session_state["lets_chat"]:
     context = prepare_prompt_team_context(dict_info)
 
     # configure chain
-    chain = load_chain(input_openai_api_key=openai.api_key, context=context)
+    chain = load_chain(input_openai_api_key, context=context)
 
     # initialize chat history
     if "messages" not in st.session_state:
