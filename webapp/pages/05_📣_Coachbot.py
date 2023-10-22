@@ -13,7 +13,7 @@ import openai
 st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 
 
-@st.cache_resource()
+# @st.cache_resource()
 def load_chain(input_openai_api_key=openai.api_key, context=""):
     """Configures a conversational chain for answering user questions."""
     # load OpenAI's language model
@@ -88,10 +88,10 @@ if "team" not in st.session_state:
     )
     st.session_state["team"] = team
 
-    st.button("Let's chat!")
+    go = st.button("Let's chat!")
 
 # initialize navbar and chat window
-else:
+if go:
     with st.sidebar:
         with st.container():
             st.success(
