@@ -82,9 +82,12 @@ st.title("💬 Coachbot")
 st.markdown("### Seek advice from an AI futsal coach")
 
 # initialize session state
-if "team" not in st.session_state and "lets_chat" not in st.session_state:
+if "team" not in st.session_state:
     st.session_state["team"] = "ZVC Copains"
+if "lets_chat" not in st.session_state:
     st.session_state["lets_chat"] = False
+if "chain" not in st.session_state:
+    st.session_state["chain"] = None
 
 # ask for team first
 if not st.session_state["lets_chat"]:
@@ -165,6 +168,7 @@ if st.session_state["lets_chat"]:
 
     # configure chain
     chain = load_chain(input_openai_api_key=openai.api_key, context=context)
+    st.session_state["chain"] = chain
 
     # initialize chat history
     if "messages" not in st.session_state:
@@ -196,7 +200,7 @@ if st.session_state["lets_chat"]:
         with st.chat_message("assistant", avatar=avatar_ai):
             # send user's question to chain
             try:
-                result = chain({"input": query})
+                result = st.session_state["chain"]({"input": query})
             except AuthenticationError:
                 st.warning("Your API key is invalid or expired...")
                 st.stop()
