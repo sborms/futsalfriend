@@ -13,7 +13,7 @@ st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 
 
 @st.cache_resource()
-def load_chain(openai_api_key, context=""):
+def load_chain(openai_api_key="sk-...", context=""):
     """Configures a conversational chain for answering user questions."""
     # load OpenAI's language model
     llm = ChatOpenAI(
@@ -122,6 +122,7 @@ else:
                     "Paste your key here:",
                     type="password",
                     placeholder="sk-...",
+                    # value="sk-..."
                 )
 
     st.markdown(
