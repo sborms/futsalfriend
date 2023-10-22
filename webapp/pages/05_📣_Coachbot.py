@@ -16,7 +16,6 @@ st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 @st.cache_resource()
 def load_chain(input_openai_api_key=openai.api_key, context=""):
     """Configures a conversational chain for answering user questions."""
-    print(f"inside: {input_openai_api_key}")
     # load OpenAI's language model
     llm = ChatOpenAI(
         temperature=0.5, model="gpt-3.5-turbo", openai_api_key=input_openai_api_key
@@ -113,6 +112,7 @@ else:
             if "Basic" in bot_type:
                 input_openai_api_key = st.secrets["openai"]["api_key_free"]
             elif "Advanced" in bot_type:
+                load_chain.clear()  # clear cache to reload with new API key
                 st.info(
                     """
                     Enter your OpenAI API key (we won't expose it!) to use your own account.
@@ -127,7 +127,6 @@ else:
                 )
             
             openai.api_key = input_openai_api_key
-            print(f"outside: {openai.api_key}")
 
     st.markdown(
         "*You can **try** to write in any language other than English. "
