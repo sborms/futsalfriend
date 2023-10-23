@@ -30,7 +30,7 @@ The data comes from the [lzvcup.be](https://www.lzvcup.be) website. Scraping it 
     - The _palmares_ of the team (i.e. the competition positions they achieved in the past).
 - **Step 5** - Go to each region-specific sportshall's page URL and parse all _individual sportshalls_ together with metadata like address and email address. 
 - **Step 6** - Go to each of the player's page URL and grab their _historical statistics_.
-- **Step 7** - Transform all the scraped data into a few tables with relevant metadata (for instance, area and region).
+- **Step 7** - Transform all the scraped data into several tables including relevant metadata (for instance, area and region).
 - **Step 8** - Store the tables in a database (in this case SQLite but alternatively on the cloud).
 
 All relevant code is in the `scraper/` folder. You can call `make scrape` to run the full scraping script `main.py`. It takes around 15-20 minutes, plus another 10-15 minutes if the geographic coordinates for the sportshalls need to be processed afresh.

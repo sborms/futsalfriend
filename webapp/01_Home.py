@@ -1,12 +1,7 @@
 import streamlit as st
 from utils import add_socials_to_navbar
 
-st.set_page_config(
-    page_title="Futsal Friend",
-    page_icon="⚽",
-    layout="wide",
-    initial_sidebar_state="expanded",  # "collapsed"
-)
+st.set_page_config(page_title="Futsal Friend", page_icon="⚽", layout="wide")
 
 ##################
 ########## UI   ##

@@ -1,5 +1,6 @@
 # Added
 .ruff_cache/
+.vscode/
 .streamlit/
 data/
 spielerei/
