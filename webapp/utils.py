@@ -1,8 +1,12 @@
 import streamlit as st
 from geopy.distance import distance
+from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
 
-geolocator = Nominatim(user_agent="address_finder_futsalfriend_app").geocode
+geolocator = RateLimiter(
+    Nominatim(user_agent="address_finder_futsalfriend_app").geocode,
+    min_delay_seconds=1,
+)
 
 
 @st.cache_resource(show_spinner=False)
