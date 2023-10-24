@@ -62,7 +62,8 @@ def add_coordinates(df, dir_coordinates="data/_coordinates.csv"):
 
     # fill in missing coordinates
     geolocator = RateLimiter(
-        Nominatim(user_agent="address_finder").geocode, min_delay_seconds=1
+        Nominatim(user_agent="address_finder_futsalfriend_scraper").geocode,
+        min_delay_seconds=1,
     )  # delay is required by Nominatim usage policy
 
     def get_coordinates(address, address2, area, country="Belgium"):

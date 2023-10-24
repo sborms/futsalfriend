@@ -2,7 +2,7 @@ import streamlit as st
 from geopy.distance import distance
 from geopy.geocoders import Nominatim
 
-geolocator = Nominatim(user_agent="address_finder").geocode
+geolocator = Nominatim(user_agent="address_finder_futsalfriend_app").geocode
 
 
 @st.cache_resource(show_spinner=False)
