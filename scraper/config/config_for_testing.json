@@ -5,12 +5,7 @@
         "csv": false
     },
     "areas": {
-        "ANTWERPEN": "results/1",
-        "BRUSSELS GEWEST": "results/2",
-        "LIMBURG": "results/3",
-        "OOST-VLAANDEREN": "results/4",
-        "VLAAMS BRABANT": "results/5",
-        "WEST-VLAANDEREN": "results/6"
+        "BRUSSELS GEWEST": "results/2"
     },
     "dir_output": "data",
     "postprocessing": {

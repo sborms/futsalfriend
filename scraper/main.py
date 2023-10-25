@@ -82,13 +82,13 @@ def scrape(config, log_main):
         log_main.info(f"Area {area} successfully processed")
 
     # gather lists into single DataFrames
-    df_competitions_urls_all = pd.concat(list_competitions)
-    df_teams_all = pd.concat(list_teams)
-    df_schedules_all = pd.concat(list_schedules)
-    df_standings_all = pd.concat(list_standings)
-    df_stats_players_all = pd.concat(list_stats)
-    df_palmares_all = pd.concat(list_palmares)
-    df_sportshalls_all = pd.concat(list_sportshalls)
+    df_competitions_urls_all = pd.concat(list_competitions).reset_index(drop=True)
+    df_teams_all = pd.concat(list_teams).reset_index(drop=True)
+    df_schedules_all = pd.concat(list_schedules).reset_index(drop=True)
+    df_standings_all = pd.concat(list_standings).reset_index(drop=True)
+    df_stats_players_all = pd.concat(list_stats).reset_index(drop=True)
+    df_palmares_all = pd.concat(list_palmares).reset_index(drop=True)
+    df_sportshalls_all = pd.concat(list_sportshalls).reset_index(drop=True)
 
     # get historical player statistics if enabled in config
     if config["steps"]["historical_players"] is True:
@@ -158,7 +158,7 @@ if __name__ == "__main__":
 
     log.info(f"Running script from {DIR_SCRIPT}")
 
-    config = DataStorage.load_json(f"{DIR_SCRIPT}/config/config.json")
+    config = DataStorage.load_json(f"{DIR_SCRIPT}/config/config_for_testing.json")
     log.info("Config loaded")
 
     dict_tables = scrape(config, log_main=log)
@@ -170,5 +170,5 @@ if __name__ == "__main__":
     store(config, dict_tables, log_main=log)
     log.info("Data stored")
 
-    write_current_date_to_file(config["dir_last_updated_date"])
+    write_current_date_to_file(config["dir_last_updated"])
     log.info("Refresh date updated.")

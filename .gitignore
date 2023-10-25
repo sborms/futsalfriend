@@ -2,7 +2,8 @@
 .ruff_cache/
 .vscode/
 .streamlit/
-data/
+data/*
+!data/_coordinates.csv
 spielerei/
 logs/
 
