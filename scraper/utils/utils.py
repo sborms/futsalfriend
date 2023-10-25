@@ -18,6 +18,12 @@ def ymdhms():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def write_current_date_to_file(dir):
+    """Writes away current date as DD-MM-YYYY in a text file."""
+    with open(dir, "w") as f:
+        f.write(datetime.now().strftime("%d-%m-%Y"))
+
+
 def chunks(lst, n):
     """Yields successive n-sized chunks from input list."""
     for i in range(0, len(lst), n):

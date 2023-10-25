@@ -10,7 +10,13 @@ from scraper.db.update import refresh_database
 from scraper.parsers.lzvcup import LZVCupParser
 from scraper.utils.base import DataStorage
 from scraper.utils.logger import Logger
-from scraper.utils.utils import add_coordinates, create_levels_table, postproces_df, ymd
+from scraper.utils.utils import (
+    add_coordinates,
+    create_levels_table,
+    postproces_df,
+    write_current_date_to_file,
+    ymd,
+)
 
 DIR_LOGS = f"{DIR_SCRIPT}/logs/{ymd()}/"  # subdivide logs by day of script execution
 
@@ -130,11 +136,11 @@ def process_data(config, dict_tables, log_main):
     return dict_tables
 
 
-def store(config, dict_tables, log_main, csv=True):
+def store(config, dict_tables, log_main):
     # refresh SQLite database
     refresh_database(dict_tables, path2db=config["database"], logger=log_main)
 
-    if csv:
+    if config["steps"]["csv"]:
         # additionally store all tables as csv files
         root = config["dir_output"]
         for data_name, data in dict_tables.items():
@@ -163,3 +169,6 @@ if __name__ == "__main__":
 
     store(config, dict_tables, log_main=log)
     log.info("Data stored")
+
+    write_current_date_to_file(config["dir_last_updated_date"])
+    log.info("Refresh date updated.")

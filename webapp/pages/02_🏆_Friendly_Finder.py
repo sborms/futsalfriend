@@ -15,7 +15,7 @@ df_teams = queries.query_teams(conn)
 ##################
 
 st.title("Friendly Finder")
-st.markdown("### Scout an opponent for a friendly")
+st.markdown("### Score an opponent for a friendly")
 
 # ask for inputs
 levels = {"Courtois 💪💪💪": 1, "Casteels 💪💪": 2, "Mignolet 💪": 3}

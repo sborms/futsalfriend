@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import add_socials_to_navbar
+from utils import add_socials_to_sidebar
 
 st.set_page_config(page_title="Futsal Friend", page_icon="⚽", layout="wide")
 
@@ -7,7 +7,12 @@ st.set_page_config(page_title="Futsal Friend", page_icon="⚽", layout="wide")
 ########## UI   ##
 ##################
 
-add_socials_to_navbar()
+add_socials_to_sidebar()
+
+with st.sidebar:
+    with open("webapp/last_updated_date.txt", "r") as f:
+        last_updated = f.read()
+    st.markdown(f"**Last updated:** {last_updated}")
 
 st.markdown(
     """# ⚽ Futsal Friend <span style=color:#030080><font size=4>Beta</font></span>""",
@@ -22,7 +27,7 @@ with st.expander("What is Futsal Friend?"):
 with st.expander("OK but what can I do with it?"):
     st.markdown(
         """
-        There are four things you can do: (1) scout a potential **opponent** for a 
+        There are four things you can do: (1) score a potential **opponent** for a 
         friendly match, (2) find a **team** to join as a player, (3) compare your
         game **stats** to those of others, and (4) get jolly **advice** for your
         team or yourself as a player. Check out the separate pages in the sidebar

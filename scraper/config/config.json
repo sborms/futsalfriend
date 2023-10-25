@@ -1,7 +1,8 @@
 {
     "url_base": "https://www.lzvcup.be",
     "steps": {
-        "historical_players": true
+        "historical_players": true,
+        "csv": true
     },
     "areas": {
         "ANTWERPEN": "results/1",
@@ -22,5 +23,6 @@
         "standings": [["area", "region", "competition", "team"], []],
         "palmares": [["team", "seizoen", "reeks", "positie"], ["area", "region", "competition"]]
     },
-    "database": "database/futsalfriend.db"
+    "database": "database/futsalfriend.db",
+    "dir_last_updated_date": "webapp/last_updated_date.txt"
 }

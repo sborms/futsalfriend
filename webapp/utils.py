@@ -91,7 +91,7 @@ def style_table(df, drop_cols=[]):
     return df
 
 
-def add_socials_to_navbar():
+def add_socials_to_sidebar():
     """Adds social media buttons to the Streamlit sidebar."""
     st.markdown(
         """

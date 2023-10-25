@@ -1,0 +1,32 @@
+name: Run scraper and update SQLite database
+
+on:
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: "45 02 * * SAT"  # at 02:45 every Saturday
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.9"
+    - name: Install dependencies
+      run: |
+           python -m pip install --upgrade pip
+           pip install -r scraper/requirements.txt
+    - name: Scrape data
+      run: make scrape
+    - name: Commit changes
+      run: |
+           git config --local user.name ${{ secrets.USER_NAME }}
+           git config --local user.email ${{ secrets.EMAIL }}
+           make push message="Scrape baby scrape"
