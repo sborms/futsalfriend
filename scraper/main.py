@@ -158,7 +158,8 @@ if __name__ == "__main__":
 
     log.info(f"Running script from {DIR_SCRIPT}")
 
-    config = DataStorage.load_json(f"{DIR_SCRIPT}/config/config_for_testing.json")
+    config = DataStorage.load_json(f"{DIR_SCRIPT}/config/config.json")
+    # config = DataStorage.load_json(f"{DIR_SCRIPT}/config/config_for_testing.json")
     log.info("Config loaded")
 
     dict_tables = scrape(config, log_main=log)

@@ -1,10 +1,10 @@
 name: Run scraper and update SQLite database
 
 on:
-  push:
-    branches: [ "main" ]
+#   push:
+#     branches: [ "main" ]
   schedule:
-    - cron: "45 02 * * SAT"  # at 02:45 every Saturday
+    - cron: "45 02 * * THU"  # at 02:45 every Thursday
 
 permissions:
   actions: write
