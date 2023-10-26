@@ -12,7 +12,7 @@ add_socials_to_sidebar()
 with st.sidebar:
     with open("webapp/last_updated.txt", "r") as f:
         last_updated = f.read()
-    st.markdown(f"**Last updated:** {last_updated}")
+    st.markdown(f"**Last updated**: {last_updated}")
 
 st.markdown(
     """# ⚽ Futsal Friend <span style=color:#030080><font size=4>Beta</font></span>""",
