@@ -1,6 +1,7 @@
 install:
 	@echo ">>> Installing dependencies"
-	pip install --upgrade pip && pip install -r requirements.txt
+	pip install --upgrade pip
+	pip install -r requirements.txt
 
 format:
 	@echo ">>> Formatting files using isort and Black"
@@ -13,10 +14,9 @@ lint:
 
 lint-container:
 	@echo ">>> Linting Dockerfile(s)"
-	docker run --rm -i hadolint/hadolint < Dockerfile
+	docker run --rm -i hadolint/hadolint < webapp/Dockerfile
 
-refactor:
-	format lint lint-container
+refactor: format lint lint-container
 
 coverage:
 	@echo ">>> Displaying pytest coverage report"

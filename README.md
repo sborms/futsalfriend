@@ -1,6 +1,7 @@
 # ⚽ Futsal Friend: Your Digital Futsal Companion
 
-[![Run CI/CD pipeline](https://github.com/sborms/futsalfriend/actions/workflows/cicd.yaml/badge.svg)](https://github.com/sborms/futsalfriend/actions/workflows/cicd.yaml)
+[![Tests](https://github.com/sborms/futsalfriend/actions/workflows/cicd.yaml/badge.svg)](https://github.com/sborms/futsalfriend/actions/workflows/tests.yaml)
+[![Scraper](https://github.com/sborms/futsalfriend/actions/workflows/scraper.yaml/badge.svg)](https://github.com/sborms/futsalfriend/actions/workflows/scraper.yaml)
 
 For those in love with futsal as a way to enjoy sports and to maximize time with friends.
 
