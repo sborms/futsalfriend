@@ -9,7 +9,7 @@ geolocator = RateLimiter(
 )
 
 
-@st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner=False, ttl=1800)
 def connect_to_sqlite_db():
     """Returns SQLite connection."""
     return st.experimental_connection("futsalfriend_db", type="sql")

@@ -12,7 +12,7 @@ from openai.error import AuthenticationError
 st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 
 
-@st.cache_resource()
+@st.cache_resource(show_spinner=False, ttl=1800)
 def load_chain(input_openai_api_key, context=""):
     """Configures a conversational chain for answering user questions."""
     # load OpenAI's language model
