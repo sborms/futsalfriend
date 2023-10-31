@@ -76,7 +76,7 @@ def scrape(config, log_main):
         list_palmares.append(df_palmares)
 
         # get sportshalls information
-        df_sportshalls = parser.parse_sporthalls(df_sportshalls_urls)
+        df_sportshalls = parser.parse_sportshalls(df_sportshalls_urls)
         list_sportshalls.append(df_sportshalls)
 
         log_main.info(f"Area {area} successfully processed")

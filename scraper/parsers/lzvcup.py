@@ -49,7 +49,7 @@ class LZVCupParser(BaseScraper):
         dict_regions = dict(zip(region_names, region_cards))
 
         # get the names of the competition (e.g. 2e Klasse)
-        # or the sporthalls locations together with the respective page URL
+        # or the sportshalls locations together with the respective page URL
         rows_sportshalls, rows_competitions = [], []
         for region, region_card in dict_regions.items():
             card_elements = region_card.find_all("a", class_="btn btn-outline-primary")
@@ -174,7 +174,7 @@ class LZVCupParser(BaseScraper):
 
         return df_teams, df_schedules, df_standings, df_stats, df_palmares
 
-    def parse_sporthalls(self, df_sportshalls_urls):
+    def parse_sportshalls(self, df_sportshalls_urls):
         """
         Parses the sportshalls information based on the area-specific sportshalls
         output from LZVCupParser.parse_region_cards().

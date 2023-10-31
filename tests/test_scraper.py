@@ -45,7 +45,7 @@ def test_parse_competitions_and_teams():
     assert len(df_palmares) > 0
 
 
-def test_parse_sporthalls():
-    df_sportshalls = parser.parse_sporthalls(df_sportshalls_urls)
+def test_parse_sportshalls():
+    df_sportshalls = parser.parse_sportshalls(df_sportshalls_urls)
 
     assert len(df_sportshalls) > 0
