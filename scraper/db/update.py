@@ -40,6 +40,9 @@ def refresh_database(dict_tables, path2db, logger=structlog.get_logger()):
     # connect to database
     db = SQLiteDB(path2db)
 
+    # # remove all rows from table
+    # db.drop_tables()
+
     # create empty tables with proper schema
     db.create_db()
 
