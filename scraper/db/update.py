@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 
 import structlog
@@ -31,11 +32,13 @@ class Tables(Enum):
 
 
 def refresh_database(dict_tables, path2db, logger=structlog.get_logger()):
+    """Rebuild database with new data."""
+    # remove the database file
+    if os.path.exists(path2db):
+        os.remove(path2db)
+
     # connect to database
     db = SQLiteDB(path2db)
-
-    # remove all rows from table
-    db.drop_tables()
 
     # create empty tables with proper schema
     db.create_db()
