@@ -1,4 +1,5 @@
 import streamlit as st
+from utils import TTL
 
 
 def query_nbr_next_games(_conn, dates):
@@ -31,7 +32,7 @@ def query_nbr_next_games(_conn, dates):
     return df
 
 
-@st.cache_data(show_spinner=False, ttl=1800)
+@st.cache_data(show_spinner=False, ttl=TTL)
 def query_teams(_conn):
     q = """
         select
@@ -70,7 +71,7 @@ def query_teams(_conn):
     return df
 
 
-@st.cache_data(show_spinner=False, ttl=1800)
+@st.cache_data(show_spinner=False, ttl=TTL)
 def query_players(_conn):
     q = """
         select distinct
@@ -91,7 +92,7 @@ def query_players(_conn):
     return df
 
 
-@st.cache_data(show_spinner=False, ttl=1800)
+@st.cache_data(show_spinner=False, ttl=TTL)
 def query_stats_agg(_conn):
     q = """
         select distinct
@@ -112,12 +113,12 @@ def query_stats_agg(_conn):
     return df
 
 
-@st.cache_data(show_spinner=False, ttl=1800)
+@st.cache_data(show_spinner=False, ttl=TTL)
 def query_list_teams(_conn):
     return _conn.query("select distinct team from teams;")
 
 
-@st.cache_data(show_spinner=False, ttl=1800)
+@st.cache_data(show_spinner=False, ttl=TTL)
 def query_schedule(_conn, team):
     q = f"""
         select
@@ -133,7 +134,7 @@ def query_schedule(_conn, team):
     return df
 
 
-@st.cache_data(show_spinner=False, ttl=1800)
+@st.cache_data(show_spinner=False, ttl=TTL)
 def query_stats_players(_conn, team):
     q = f"""
         select
@@ -151,7 +152,7 @@ def query_stats_players(_conn, team):
     return df
 
 
-@st.cache_data(show_spinner=False, ttl=1800)
+@st.cache_data(show_spinner=False, ttl=TTL)
 def query_standings(_conn, team):
     q = f"""
         select

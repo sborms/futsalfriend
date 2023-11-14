@@ -3,16 +3,17 @@ from geopy.distance import distance
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
 
+TTL = 900  # cache time to live in seconds
+
 geolocator = RateLimiter(
     Nominatim(user_agent="address_finder_futsalfriend_app").geocode,
     min_delay_seconds=1,
 )
 
 
-# @st.cache_resource(show_spinner=False, ttl=1800)
 def connect_to_sqlite_db():
     """Returns SQLite connection."""
-    return st.experimental_connection("futsalfriend_db", type="sql")
+    return st.connection("futsalfriend_db", type="sql", ttl=TTL)
 
 
 def get_coordinates(address, city, country="Belgium"):
