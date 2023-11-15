@@ -1,14 +1,12 @@
 from datetime import datetime, timedelta
 
-import queries
 import streamlit as st
 import utils
 
 st.set_page_config(page_title="Friendly Finder", page_icon="🏆", layout="wide")
 
-
-conn = utils.connect_to_sqlite_db()
-df_teams = queries.query_teams(conn)
+import queries
+df_teams = queries.query_teams()
 
 ##################
 ########## UI   ##
@@ -34,16 +32,20 @@ km = col3.number_input(
 level = col4.selectbox("Level", levels.keys(), index=2)
 horizon = col5.number_input("When (< days)?", value=14, min_value=3, max_value=30)
 
-today = datetime.today().strftime("%Y-%m-%d")
-max_date = (datetime.today() + timedelta(days=horizon)).strftime("%Y-%m-%d")
+today = utils.LAST_UPDATED
+max_date = (
+    datetime.strptime(today, "%Y-%m-%d").date() + timedelta(days=horizon)
+).strftime("%Y-%m-%d")
 
 # show output header
 st.markdown("#### Potential play partners 🥰")
 
 with st.spinner("Finding teams..."):
     # query tables for specified parameters
-    df_levels = conn.query(f"select team from levels where level = {levels[level]};")
-    df_n_games = queries.query_nbr_next_games(conn, dates=[today, max_date])
+    df_levels = queries.CONNECTION.query(
+        f"select team from levels where level = {levels[level]};"
+    )
+    df_n_games = queries.query_nbr_next_games(dates=[today, max_date])
 
     # filter teams based on remaining parameters
     df_out = utils.filter_teams(df_teams, city, address, km)
@@ -65,8 +67,7 @@ with st.spinner("Finding teams..."):
         )
 
         # display table
-        # st.markdown("Reach out by going to the respective team page!")
         st.write(
-            f"_The last column shows the amount of scheduled games until {max_date}._"
+            f"_The last column shows the amount of scheduled games between {today} and {max_date}._"
         )
         st.markdown(df_out.to_html(escape=False, index=False), unsafe_allow_html=True)

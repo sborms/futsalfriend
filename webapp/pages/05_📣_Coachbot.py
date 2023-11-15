@@ -1,8 +1,6 @@
 import time
 
-import queries
 import streamlit as st
-import utils
 from langchain.chains import ConversationChain
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferWindowMemory
@@ -11,8 +9,9 @@ from openai.error import AuthenticationError
 
 st.set_page_config(page_title="Coachbot", page_icon="📣", layout="wide")
 
+import queries
 
-@st.cache_resource(show_spinner=False, ttl=utils.TTL)
+@st.cache_resource(show_spinner=False, ttl=1800)
 def load_chain(input_openai_api_key, context=""):
     """Configures a conversational chain for answering user questions."""
     # load OpenAI's language model
@@ -68,8 +67,6 @@ def lets_chat():
     st.session_state["lets_chat"] = True
 
 
-conn = utils.connect_to_sqlite_db()
-
 ##################
 ########## UI   ##
 ##################
@@ -88,7 +85,7 @@ if "lets_chat" not in st.session_state:
 
 # ask for team first
 if not st.session_state["lets_chat"]:
-    teams_all = queries.query_list_teams(conn)["team"].tolist()
+    teams_all = queries.query_list_teams()["team"].tolist()
 
     col1, _, _ = st.columns(3)
     team = col1.selectbox(
@@ -144,14 +141,14 @@ if st.session_state["lets_chat"]:
     # get relevant information to add as context to prompt
     team = st.session_state["team"]
 
-    df_schedule = queries.query_schedule(conn, team)
+    df_schedule = queries.query_schedule(team=team)
 
-    df_stats_players = queries.query_stats_players(conn, team=team)
+    df_stats_players = queries.query_stats_players(team=team)
 
     oponnent_1 = [who for who in df_schedule.loc[0][1:].tolist() if who != team][0]
-    df_stats_players_oponnent_1 = queries.query_stats_players(conn, team=oponnent_1)
+    df_stats_players_oponnent_1 = queries.query_stats_players(team=oponnent_1)
 
-    df_standings = queries.query_standings(conn, team=team)
+    df_standings = queries.query_standings(team=team)
 
     dict_info = {
         "Competition standings": df_standings,

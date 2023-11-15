@@ -1,8 +1,11 @@
 import streamlit as st
-from utils import TTL
+
+TTL = 0  # cache time to live in seconds
+
+CONNECTION = st.connection("futsalfriend_db", type="sql", ttl=0)
 
 
-def query_nbr_next_games(_conn, dates):
+def query_nbr_next_games(dates):
     q = f"""
         with 
         horizon_set as 
@@ -27,13 +30,13 @@ def query_nbr_next_games(_conn, dates):
         group by team;  
     """
 
-    df = _conn.query(q)
+    df = CONNECTION.query(q)
 
     return df
 
 
 @st.cache_data(show_spinner=False, ttl=TTL)
-def query_teams(_conn):
+def query_teams():
     q = """
         select
             t.area,
@@ -66,13 +69,13 @@ def query_teams(_conn):
         order by t.team;
     """
 
-    df = _conn.query(q)
+    df = CONNECTION.query(q)
 
     return df
 
 
 @st.cache_data(show_spinner=False, ttl=TTL)
-def query_players(_conn):
+def query_players():
     q = """
         select distinct
             t.area as Area,
@@ -87,13 +90,13 @@ def query_players(_conn):
         order by t.area, t.region, t.competition, c.team;
     """
 
-    df = _conn.query(q)
+    df = CONNECTION.query(q)
 
     return df
 
 
 @st.cache_data(show_spinner=False, ttl=TTL)
-def query_stats_agg(_conn):
+def query_stats_agg():
     q = """
         select distinct
             c.name as Name,
@@ -108,18 +111,18 @@ def query_stats_agg(_conn):
         group by c.name, c.team;
     """
 
-    df = _conn.query(q)
+    df = CONNECTION.query(q)
 
     return df
 
 
 @st.cache_data(show_spinner=False, ttl=TTL)
-def query_list_teams(_conn):
-    return _conn.query("select distinct team from teams;")
+def query_list_teams():
+    return CONNECTION.query("select distinct team from teams;")
 
 
 @st.cache_data(show_spinner=False, ttl=TTL)
-def query_schedule(_conn, team):
+def query_schedule(team):
     q = f"""
         select
             date,
@@ -129,13 +132,13 @@ def query_schedule(_conn, team):
         where (goals1 is NULL) and (team1 = '{team}' or team2 = '{team}');
     """
 
-    df = _conn.query(q)
+    df = CONNECTION.query(q)
 
     return df
 
 
 @st.cache_data(show_spinner=False, ttl=TTL)
-def query_stats_players(_conn, team):
+def query_stats_players(team):
     q = f"""
         select
             team,
@@ -147,13 +150,13 @@ def query_stats_players(_conn, team):
         where team = '{team}';
     """
 
-    df = _conn.query(q)
+    df = CONNECTION.query(q)
 
     return df
 
 
 @st.cache_data(show_spinner=False, ttl=TTL)
-def query_standings(_conn, team):
+def query_standings(team):
     q = f"""
         select
             positie as position,
@@ -172,6 +175,6 @@ def query_standings(_conn, team):
         on s.region = t.region and s.competition = t.competition;
     """
 
-    df = _conn.query(q)
+    df = CONNECTION.query(q)
 
     return df

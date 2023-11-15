@@ -19,9 +19,9 @@ def ymdhms():
 
 
 def write_current_date_to_file(dir):
-    """Writes away current date as DD-MM-YYYY in a text file."""
+    """Writes away current date as YYYY-MM-DD in a text file."""
     with open(dir, "w") as f:
-        f.write(datetime.now().strftime("%d-%m-%Y"))
+        f.write(datetime.now().strftime("%Y-%m-%d"))
 
 
 def chunks(lst, n):

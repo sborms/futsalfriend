@@ -1,10 +1,7 @@
 import plotly.express as px
-import queries
 import streamlit as st
-import utils
 
 st.set_page_config(page_title="Vanity Stats", page_icon="😏", layout="wide")
-
 
 def filter_stats(df_stats_agg, df_filt, min_w):
     df_stats = df_stats_agg.query(f"Games >= {min_w}").merge(
@@ -24,9 +21,9 @@ def filter_players(df, dict_filters):
     return df
 
 
-conn = utils.connect_to_sqlite_db()
-df_players = queries.query_players(conn)
-df_stats_agg = queries.query_stats_agg(conn)
+import queries
+df_players = queries.query_players()
+df_stats_agg = queries.query_stats_agg()
 
 ##################
 ########## UI   ##

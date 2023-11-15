@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import add_socials_to_sidebar
+from utils import LAST_UPDATED, add_socials_to_sidebar
 
 st.set_page_config(page_title="Futsal Friend", page_icon="⚽", layout="wide")
 
@@ -10,9 +10,7 @@ st.set_page_config(page_title="Futsal Friend", page_icon="⚽", layout="wide")
 add_socials_to_sidebar()
 
 with st.sidebar:
-    with open("webapp/last_updated.txt", "r") as f:
-        last_updated = f.read()
-    st.markdown(f"**Last updated**: {last_updated}")
+    st.markdown(f"**Last updated**: {LAST_UPDATED}")
 
 st.markdown(
     """# ⚽ Futsal Friend <span style=color:#030080><font size=4>Beta</font></span>""",
