@@ -64,6 +64,9 @@ def filter_teams(df, city, address, km):
         )
     )
 
+    # drop rows with NA values
+    df_out = df_out.dropna()
+
     return df_out
 
 

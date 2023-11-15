@@ -34,7 +34,7 @@ with st.spinner("Finding teams..."):
 
     # filter teams based on parameters
     df_out = utils.filter_teams(df_teams, city, address, km)
-
+    
     if len(df_out) == 0:
         st.warning("No teams found for the specified parameters. Try something else!")
     else:
