@@ -23,6 +23,6 @@
         "standings": [["area", "region", "competition", "team"], []],
         "palmares": [["team", "seizoen", "reeks", "positie"], ["area", "region", "competition"]]
     },
-    "database": "webapp/futsalfriend.db",
+    "database": "database/futsalfriend.db",
     "dir_last_updated": "webapp/last_updated.txt"
 }
