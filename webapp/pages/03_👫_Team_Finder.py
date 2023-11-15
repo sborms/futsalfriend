@@ -30,6 +30,8 @@ km = col3.number_input(
 st.markdown("#### Possible teams to join 🤩")
 
 with st.spinner("Finding teams..."):
+    st.cache_data.clear()
+
     # filter teams based on parameters
     df_out = utils.filter_teams(df_teams, city, address, km)
 

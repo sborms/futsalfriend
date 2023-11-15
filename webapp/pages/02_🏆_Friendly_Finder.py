@@ -41,6 +41,8 @@ max_date = (
 st.markdown("#### Potential play partners 🥰")
 
 with st.spinner("Finding teams..."):
+    st.cache_data.clear()
+
     # query tables for specified parameters
     df_levels = queries.CONNECTION.query(
         f"select team from levels where level = {levels[level]};"

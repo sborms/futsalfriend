@@ -84,7 +84,7 @@ df_sel = filter_stats(df_stats_agg, df_players, min_w)
 df_sel.sort_values(stat_col, ascending=False, inplace=True)
 
 # plot stats if button clicked
-button = st.button("Show")
+button = st.button("Show", on_click=st.cache_data.clear())
 if button:
     if fig_type == "Bar":
         fig = px.bar(

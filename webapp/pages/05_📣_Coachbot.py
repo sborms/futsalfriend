@@ -64,6 +64,9 @@ def prepare_prompt_team_context(dict_info):
 
 
 def lets_chat():
+    st.cache_data.clear()
+    st.cache_resource.clear()
+
     st.session_state["lets_chat"] = True
 
 
@@ -85,6 +88,8 @@ if "lets_chat" not in st.session_state:
 
 # ask for team first
 if not st.session_state["lets_chat"]:
+    st.cache_data.clear()
+
     teams_all = queries.query_list_teams()["team"].tolist()
 
     col1, _, _ = st.columns(3)
@@ -119,7 +124,6 @@ if st.session_state["lets_chat"]:
             if "Basic" in bot_type:
                 input_openai_api_key = st.secrets["openai"]["api_key_free"]
             elif "Advanced" in bot_type:
-                # load_chain.clear()  # clear cache
                 st.info(
                     """
                     Enter your OpenAI API key (we won't expose it!) to use your own account.
