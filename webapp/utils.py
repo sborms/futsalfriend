@@ -4,10 +4,6 @@ from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
 
 
-with open("webapp/last_updated.txt", "r") as f:
-    LAST_UPDATED = f.read()
-
-
 geolocator = RateLimiter(
     Nominatim(user_agent="address_finder_futsalfriend_app").geocode,
     min_delay_seconds=1,

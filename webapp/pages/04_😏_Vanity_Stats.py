@@ -76,7 +76,7 @@ col1, col2, col3, _ = st.columns(4)
 stat_col = col1.selectbox(
     "Statistic", ["Games", "Goals", "Assists", "(G+A)/W"], index=1
 )
-min_w = col2.number_input("Minimum games played", min_value=1, value=5, step=1)
+min_w = col2.number_input("Minimum games", min_value=1, value=5, step=1)
 fig_type = col3.selectbox("Plot type", ["Bar", "Scatter"])
 
 # filter stats

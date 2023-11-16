@@ -32,7 +32,9 @@ km = col3.number_input(
 level = col4.selectbox("Level", levels.keys(), index=2)
 horizon = col5.number_input("When (< days)?", value=14, min_value=3, max_value=30)
 
-today = utils.LAST_UPDATED
+with open("webapp/last_updated.txt", "r") as f:
+    today = f.read()
+
 max_date = (
     datetime.strptime(today, "%Y-%m-%d").date() + timedelta(days=horizon)
 ).strftime("%Y-%m-%d")
