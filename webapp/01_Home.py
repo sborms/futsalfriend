@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import LAST_UPDATED, add_socials_to_sidebar
+from utils import add_socials_to_sidebar
 
 st.set_page_config(page_title="Futsal Friend", page_icon="⚽", layout="wide")
 
