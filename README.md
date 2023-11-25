@@ -68,3 +68,4 @@ docker run -p 8501:8501 futsalfriend
 The following resources were helpful in setting up this application:
 - [Build your own Notion chatbot](https://blog.streamlit.io/build-your-own-notion-chatbot)
 - [GPT Lab](https://github.com/dclin/gptlab-streamlit)
+- [datanerd.tech](https://datanerd.tech)
