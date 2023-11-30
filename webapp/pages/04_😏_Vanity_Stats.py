@@ -29,6 +29,11 @@ df_stats_agg = queries.query_stats_agg()
 ########## UI   ##
 ##################
 
+with st.sidebar:
+    headercol1, headercol2 = st.columns(2)
+    headercol1.metric("Nbr. of teams", df_players["Team"].nunique())
+    headercol2.metric("Nbr. of players", df_players["Name"].nunique())
+    
 st.title("Vanity Stats")
 st.markdown("### Analyze player-level game performance")
 
